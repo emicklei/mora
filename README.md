@@ -1,8 +1,8 @@
 # Mora - MongoDB Rest API
 
-## generic REST server in Go for accessing MongoDB documents and meta data
+#### generic REST server in Go for accessing MongoDB documents and meta data
 	
-### API	
+##### API	
 	
 Return a JSON document with the names of all collections in a databases
 		
