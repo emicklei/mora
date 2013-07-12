@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/emicklei/go-restful"
 	"labix.org/v2/mgo"
+	"log"
 )
 
 type MetaResource struct {
@@ -11,9 +12,9 @@ type MetaResource struct {
 
 func (m MetaResource) Register() {
 	ws := new(restful.WebService)
+	ws.Path("/databases/{database}")
 	ws.Consumes("*/*")
-	restful.DefaultResponseMimeType = restful.MIME_JSON
-	ws.Route(ws.GET("/databases/{database}/collections").To(m.getAllCollectionNames))
+	ws.Route(ws.GET("/collections").To(m.getAllCollectionNames))
 	restful.Add(ws)
 }
 
@@ -21,6 +22,7 @@ func (m MetaResource) getAllCollectionNames(req *restful.Request, resp *restful.
 	dbname := req.PathParameter("database")
 	names, err := m.session.DB(dbname).CollectionNames()
 	if err != nil {
+		log.Printf("[mora] error:%v", err)
 		resp.WriteError(500, err)
 		return
 	}

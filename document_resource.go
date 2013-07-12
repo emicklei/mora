@@ -13,10 +13,9 @@ type DocumentResource struct {
 
 func (d DocumentResource) Register() {
 	ws := new(restful.WebService)
+	ws.Path("/documents/{database}")
 	ws.Consumes("*/*")
-	restful.DefaultResponseMimeType = restful.MIME_JSON
-	ws.Route(ws.GET("/databases/{database}/{collection}/{id}").To(d.getDocument))
-	ws.Route(ws.GET("/databases/{database}/collections").To(d.getAllCollectionNames))
+	ws.Route(ws.GET("/{collection}/{_id}").To(d.getDocument))
 	restful.Add(ws)
 }
 
@@ -24,7 +23,7 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 	db := d.session.DB(req.PathParameter("database"))
 	col := db.C(req.PathParameter("collection"))
 	doc := bson.M{}
-	err := col.FindId(bson.ObjectIdHex(req.PathParameter("id"))).One(&doc)
+	err := col.FindId(bson.ObjectIdHex(req.PathParameter("_id"))).One(&doc)
 	if err != nil {
 		if "not found" == err.Error() {
 			resp.WriteError(404, err)
@@ -35,14 +34,4 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 		return
 	}
 	resp.WriteEntity(doc)
-}
-
-func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *restful.Response) {
-	dbname := req.PathParameter("database")
-	names, err := d.session.DB(dbname).CollectionNames()
-	if err != nil {
-		resp.WriteError(500, err)
-		return
-	}
-	resp.WriteEntity(names)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/dmotylev/goproperties"
+	"github.com/emicklei/go-restful"
 	"labix.org/v2/mgo"
 	"log"
 	"net/http"
@@ -23,6 +24,7 @@ func main() {
 	}
 	defer session.Close()
 
+	restful.DefaultResponseMimeType = restful.MIME_JSON
 	DocumentResource{session}.Register()
 	MetaResource{session}.Register()
 
