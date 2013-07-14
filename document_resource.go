@@ -31,10 +31,13 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 		resp.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	session, err := d.getMongoSession(req)
+	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
 		return
+	}
+	if needsClose {
+		defer func() { session.Close() }()
 	}
 	names, err := session.DatabaseNames()
 	if err != nil {
@@ -46,10 +49,13 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 }
 
 func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *restful.Response) {
-	session, err := d.getMongoSession(req)
+	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
 		return
+	}
+	if needsClose {
+		defer func() { session.Close() }()
 	}
 	dbname := req.PathParameter("database")
 	names, err := session.DB(dbname).CollectionNames()
@@ -62,11 +68,15 @@ func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *rest
 }
 
 func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Response) {
-	col, err := d.getMongoCollection(req)
+	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
 		return
 	}
+	if needsClose {
+		defer func() { session.Close() }()
+	}
+	col := d.getMongoCollection(req, session)
 	query := col.Find(bson.M{}) // all
 	query.Limit(10)
 	result := []bson.M{}
@@ -78,11 +88,15 @@ func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Respo
 }
 
 func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Response) {
-	col, err := d.getMongoCollection(req)
+	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
 		return
 	}
+	if needsClose {
+		defer func() { session.Close() }()
+	}
+	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	id := req.PathParameter("_id")
 	var finderr error
@@ -105,11 +119,15 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 }
 
 func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
-	col, err := d.getMongoCollection(req)
+	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
 		return
 	}
+	if needsClose {
+		defer func() { session.Close() }()
+	}
+	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
 	err = col.Insert(doc)
@@ -125,25 +143,19 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	//doc := bson.M{}
 }
 
-func (d DocumentResource) getMongoCollection(req *restful.Request) (*mgo.Collection, error) {
-	session, err := d.getMongoSession(req)
-	if err != nil {
-		return nil, err
-	}
-	db := session.DB(req.PathParameter("database"))
-	col := db.C(req.PathParameter("collection"))
-	return col, nil
+func (d DocumentResource) getMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
+	return session.DB(req.PathParameter("database")).C(req.PathParameter("collection"))
 }
 
-func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, error) {
+func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, bool, error) {
 	hostport := req.PathParameter("hostport")
 	if strings.Index(hostport, ":") == -1 {
 		// append default port
 		hostport += ":27017"
 	}
-	session, err := openSession(hostport)
+	session, needsClose, err := openSession(hostport)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return session, nil
+	return session, needsClose, nil
 }

@@ -33,12 +33,12 @@ func closeSession(hostport string) {
 }
 
 // hostport like localhost:27017
-func openSession(hostport string) (*mgo.Session, error) {
+func openSession(hostport string) (*mgo.Session, bool, error) {
 	sessionAccessMutex.RLock()
 	existing := sessions[hostport]
 	sessionAccessMutex.RUnlock()
 	if existing != nil {
-		return existing, nil
+		return existing.Clone(), true, nil
 	}
 	sessionAccessMutex.Lock()
 	info("connecting to [%s]", hostport)
@@ -50,5 +50,5 @@ func openSession(hostport string) (*mgo.Session, error) {
 		sessions[hostport] = newSession
 	}
 	sessionAccessMutex.Unlock()
-	return newSession, err
+	return newSession, false, err
 }
