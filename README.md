@@ -4,26 +4,32 @@
 	
 ##### API	
 	
+	
 Return a JSON document with the names of all databases
 		
-	GET /databases
+	GET /{host}
 	
-Return a JSON document with the names of all collections in a databases
+	host 	::= <address>[:<port>]
+	address ::= <hostname>|<ip>
+	
+	e.g. /localhost:27017
+	
+Return a JSON document with the names of all collections in a database
 		
-	GET /databases/{database}/collections
+	GET /{host}/{database}
 
 Return a JSON document from a collection using its _id
 	
-	GET /documents/{database}/{collection}/{_id}
+	GET /{host}/{database}/{collection}/{_id}
 		
 Return a JSON document with the first (max 10) documents in a collection			
 
-	GET /documents/{database}/{collection}
+	GET /{host}/{database}/{collection}
 					
 Store a JSON document in a colllection
 
-	PUT /documents/{database}/{collection}/{_id}	
-	(todo) POST /documents/{database}/{collection}
+	PUT /{host}/{database}/{collection}/{_id}
+	(todo) POST /{host}/{database}/{collection}
 
 Install
 						

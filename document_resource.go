@@ -6,40 +6,79 @@ import (
 	"labix.org/v2/mgo/bson"
 	"log"
 	"net/http"
+	"strings"
 )
 
-type DocumentResource struct {
-	session *mgo.Session
-}
+type DocumentResource struct{}
 
 func (d DocumentResource) Register() {
 	ws := new(restful.WebService)
-	ws.Path("/documents/{database}")
+	ws.Path("/{hostport}")
 	ws.Consumes("*/*")
-	ws.Route(ws.GET("/{collection}/{_id}").To(d.getDocument))
-	ws.Route(ws.PUT("/{collection}/{_id}").To(d.putDocument))
-	ws.Route(ws.POST("/{collection}").To(d.postDocument))
-	ws.Route(ws.GET("/{collection}").To(d.getDocuments))
+	ws.Route(ws.GET("/").To(d.getAllDatabaseNames))
+	ws.Route(ws.GET("/{database}").To(d.getAllCollectionNames))
+	ws.Route(ws.GET("/{database}/{collection}/{_id}").To(d.getDocument))
+	ws.Route(ws.PUT("/{database}/{collection}/{_id}").To(d.putDocument))
+	ws.Route(ws.POST("/{database}/{collection}").To(d.postDocument))
+	ws.Route(ws.GET("/{database}/{collection}").To(d.getDocuments))
 	restful.Add(ws)
 }
 
+func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restful.Response) {
+	session, err := d.getMongoSession(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
+	names, err := session.DatabaseNames()
+	if err != nil {
+		log.Printf("[mora] error:%v", err)
+		resp.WriteError(500, err)
+		return
+	}
+	resp.WriteEntity(names)
+}
+
+func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *restful.Response) {
+	session, err := d.getMongoSession(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
+	dbname := req.PathParameter("database")
+	names, err := session.DB(dbname).CollectionNames()
+	if err != nil {
+		log.Printf("[mora] error:%v", err)
+		resp.WriteError(500, err)
+		return
+	}
+	resp.WriteEntity(names)
+}
+
 func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Response) {
-	col := d.getMongoCollection(req)
+	col, err := d.getMongoCollection(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
 	query := col.Find(bson.M{}) // all
 	query.Limit(10)
 	result := []bson.M{}
-	err := query.All(&result)
+	err = query.All(&result)
 	if err != nil {
-		log.Printf("[mora] error:%v", err)
 		resp.WriteError(500, err)
 	}
 	resp.WriteEntity(result)
 }
 
 func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Response) {
-	col := d.getMongoCollection(req)
+	col, err := d.getMongoCollection(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
 	doc := bson.M{}
-	err := col.Find(bson.M{"_id": req.PathParameter("_id")}).One(&doc)
+	err = col.Find(bson.M{"_id": req.PathParameter("_id")}).One(&doc)
 	if err != nil {
 		// retry using hex
 		err2 := col.FindId(bson.ObjectIdHex(req.PathParameter("_id"))).One(&doc)
@@ -58,12 +97,15 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 }
 
 func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
-	col := d.getMongoCollection(req)
+	col, err := d.getMongoCollection(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
 	doc := bson.M{}
 	req.ReadEntity(&doc)
-	err := col.Insert(doc)
+	err = col.Insert(doc)
 	if err != nil {
-		log.Printf("[mora] error:%v", err)
 		resp.WriteError(500, err)
 	}
 	resp.WriteHeader(http.StatusCreated)
@@ -75,8 +117,26 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	//doc := bson.M{}
 }
 
-func (d DocumentResource) getMongoCollection(req *restful.Request) *mgo.Collection {
-	db := d.session.DB(req.PathParameter("database"))
+func (d DocumentResource) getMongoCollection(req *restful.Request) (*mgo.Collection, error) {
+	session, err := d.getMongoSession(req)
+	if err != nil {
+		return nil, err
+	}
+	db := session.DB(req.PathParameter("database"))
 	col := db.C(req.PathParameter("collection"))
-	return col
+	return col, nil
+}
+
+func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, error) {
+	hostport := req.PathParameter("hostport")
+	if strings.Index(hostport, ":") == -1 {
+		// append default port
+		hostport += ":27017"
+	}
+	session, err := openSession(hostport)
+	if err != nil {
+		log.Printf("[mora] error:%v", err)
+		return nil, err
+	}
+	return session, nil
 }
