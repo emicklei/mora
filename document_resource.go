@@ -15,6 +15,7 @@ func (d DocumentResource) Register() {
 	ws := new(restful.WebService)
 	ws.Path("/docs")
 	ws.Consumes("*/*")
+	ws.Produces(restful.MIME_JSON)
 	hostport := ws.PathParameter("hostport", "Address of the MongoDB instance, e.g. localhost:27017")
 
 	ws.Route(ws.GET("/{hostport}").To(d.getAllDatabaseNames).
