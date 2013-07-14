@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/dmotylev/goproperties"
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/swagger"
 	"log"
 	"net/http"
 )
@@ -26,6 +27,15 @@ func main() {
 	}()
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
+
+	config := swagger.Config{
+		WebServices:     restful.RegisteredWebServices(),
+		WebServicesUrl:  basePath,
+		ApiPath:         "/apidocs.json",
+		SwaggerPath:     "/apidocs/",
+		SwaggerFilePath: props["swagger.file.path"]}
+	swagger.InstallSwaggerService(config)
+
 	info("ready to serve on %s", basePath)
 	log.Fatal(http.ListenAndServe(":"+props["http.server.port"], nil))
 }

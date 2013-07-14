@@ -13,14 +13,50 @@ type DocumentResource struct{}
 
 func (d DocumentResource) Register() {
 	ws := new(restful.WebService)
-	ws.Path("/docs/{hostport}")
+	ws.Path("/docs")
 	ws.Consumes("*/*")
-	ws.Route(ws.GET("/").To(d.getAllDatabaseNames))
-	ws.Route(ws.GET("/{database}").To(d.getAllCollectionNames))
-	ws.Route(ws.GET("/{database}/{collection}/{_id}").To(d.getDocument))
-	ws.Route(ws.PUT("/{database}/{collection}/{_id}").To(d.putDocument))
-	ws.Route(ws.POST("/{database}/{collection}").To(d.postDocument))
-	ws.Route(ws.GET("/{database}/{collection}").To(d.getDocuments))
+	hostport := ws.PathParameter("hostport", "Address of the MongoDB instance, e.g. localhost:27017")
+
+	ws.Route(ws.GET("/{hostport}").To(d.getAllDatabaseNames).
+		Doc("Return all database names").
+		Param(hostport))
+
+	database := ws.PathParameter("database", "Database name from the MongoDB instance")
+
+	ws.Route(ws.GET("/{hostport}/{database}").To(d.getAllCollectionNames).
+		Doc("Return all collections for the database").
+		Param(hostport).
+		Param(database))
+
+	collection := ws.PathParameter("collection", "Collection name from the database")
+	id := ws.PathParameter("_id", "Storage identifier of the document")
+
+	ws.Route(ws.GET("/{hostport}/{database}/{collection}/{_id}").To(d.getDocument).
+		Doc("Return a document from a collection from the database by its internal _id").
+		Param(hostport).
+		Param(database).
+		Param(collection).
+		Param(id))
+
+	ws.Route(ws.PUT("/{hostport}/{database}/{collection}/{_id}").To(d.putDocument).
+		Doc("Store a document to a collection from the database using its internal _id").
+		Param(hostport).
+		Param(database).
+		Param(collection).
+		Param(id))
+
+	ws.Route(ws.POST("/{hostport}/{database}/{collection}").To(d.postDocument).
+		Doc("Store a document to a collection from the database").
+		Param(hostport).
+		Param(database).
+		Param(collection))
+
+	ws.Route(ws.GET("/{hostport}/{database}/{collection}").To(d.getDocuments).
+		Doc("Return documents (max 10) from a collection from the database.").
+		Param(hostport).
+		Param(database).
+		Param(collection))
+
 	restful.Add(ws)
 }
 
