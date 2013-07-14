@@ -40,8 +40,14 @@ func openSession(hostport string) (*mgo.Session, error) {
 		return existing, nil
 	}
 	sessionAccessMutex.Lock()
+	info("connecting to [%s]", hostport)
 	newSession, err := mgo.Dial(hostport)
-	sessions[hostport] = newSession
+	if err != nil {
+		info("unable to connect to [%s] because:%v", hostport, err)
+		newSession = nil
+	} else {
+		sessions[hostport] = newSession
+	}
 	sessionAccessMutex.Unlock()
 	return newSession, err
 }

@@ -26,10 +26,10 @@ func main() {
 	}()
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
-	info("ready to serve  %s", basePath)
+	info("ready to serve on %s", basePath)
 	log.Fatal(http.ListenAndServe(":"+props["http.server.port"], nil))
 }
 
 func info(template string, values ...interface{}) {
-	log.Printf("[mora] "+template+"\n", values)
+	log.Printf("[mora] "+template+"\n", values...)
 }

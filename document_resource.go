@@ -25,6 +25,12 @@ func (d DocumentResource) Register() {
 }
 
 func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restful.Response) {
+	// filter invalids
+	hostport := req.PathParameter("hostport")
+	if hostport == "" || strings.Index(hostport, ".") != -1 {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	session, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
@@ -135,7 +141,6 @@ func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, e
 	}
 	session, err := openSession(hostport)
 	if err != nil {
-		log.Printf("[mora] error:%v", err)
 		return nil, err
 	}
 	return session, nil
