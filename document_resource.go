@@ -13,7 +13,7 @@ type DocumentResource struct{}
 
 func (d DocumentResource) Register() {
 	ws := new(restful.WebService)
-	ws.Path("/{hostport}")
+	ws.Path("/docs/{hostport}")
 	ws.Consumes("*/*")
 	ws.Route(ws.GET("/").To(d.getAllDatabaseNames))
 	ws.Route(ws.GET("/{database}").To(d.getAllCollectionNames))
@@ -84,19 +84,21 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 		return
 	}
 	doc := bson.M{}
-	err = col.Find(bson.M{"_id": req.PathParameter("_id")}).One(&doc)
-	if err != nil {
-		// retry using hex
-		err2 := col.FindId(bson.ObjectIdHex(req.PathParameter("_id"))).One(&doc)
-		if err2 != nil {
-			if "not found" == err2.Error() {
-				resp.WriteError(404, err2)
-				return
-			} else {
-				log.Printf("[mora] error:%v", err)
-				resp.WriteError(500, err)
-				return
-			}
+	id := req.PathParameter("_id")
+	var finderr error
+	if bson.IsObjectIdHex(id) {
+		finderr = col.FindId(bson.ObjectIdHex(id)).One(&doc)
+	} else {
+		finderr = col.Find(bson.M{"_id": id}).One(&doc)
+	}
+	if finderr != nil {
+		if "not found" == finderr.Error() {
+			resp.WriteError(404, finderr)
+			return
+		} else {
+			log.Printf("[mora] error:%v", finderr)
+			resp.WriteError(500, finderr)
+			return
 		}
 	}
 	resp.WriteEntity(doc)

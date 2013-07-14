@@ -2,34 +2,43 @@
 
 #### generic REST server in Go for accessing MongoDB documents and meta data
 	
-##### API	
+##### Example		
 	
+	http://localhost:8181/docs/localhost/landskape/connections/51caec2e95c51cb63a584fde	
+
+returns the document from
+ - mongodb hosted on localhost (no port so using default :27017)
+ - database=landskape
+ - collection=connections
+ - _id=51caec2e95c51cb63a584fde
+
+##### API	
 	
 Return a JSON document with the names of all databases
 		
-	GET /{host}
+	GET /docs/{host}
 	
 	host 	::= <address>[:<port>]
 	address ::= <hostname>|<ip>
 	
-	e.g. /localhost:27017
+	e.g. /localhost:27017/docs
 	
 Return a JSON document with the names of all collections in a database
 		
-	GET /{host}/{database}
+	GET /docs/{host}/{database}
 
 Return a JSON document from a collection using its _id
 	
-	GET /{host}/{database}/{collection}/{_id}
+	GET /docs/{host}/{database}/{collection}/{_id}
 		
 Return a JSON document with the first (max 10) documents in a collection			
 
-	GET /{host}/{database}/{collection}
+	GET /docs/{host}/{database}/{collection}
 					
 Store a JSON document in a colllection
 
-	PUT /{host}/{database}/{collection}/{_id}
-	(todo) POST /{host}/{database}/{collection}
+	PUT /docs/{host}/{database}/{collection}/{_id}
+	(todo) POST /docs/{host}/{database}/{collection}
 
 Install
 						

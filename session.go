@@ -14,6 +14,7 @@ func init() {
 }
 
 func closeSessions() {
+	info("closing all sessions:", len(sessions))
 	sessionAccessMutex.Lock()
 	for _, each := range sessions {
 		each.Close()
