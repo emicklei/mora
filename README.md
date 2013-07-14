@@ -7,38 +7,40 @@
 	http://localhost:8181/docs/localhost/landskape/connections/51caec2e95c51cb63a584fde	
 
 returns the document from
- - mongodb hosted on localhost (no port so using default :27017)
+
+ - hostport=localhost, mongodb hosted on localhost (no port so using default :27017)
  - database=landskape
  - collection=connections
  - _id=51caec2e95c51cb63a584fde
 
 ##### API	
+			
+	GET /docs/{hostport}
 	
-Return a JSON document with the names of all databases
-		
-	GET /docs/{host}
+	hostport ::= <address>[:<port>]
+	address  ::= <hostname>|<ip>
 	
-	host 	::= <address>[:<port>]
-	address ::= <hostname>|<ip>
-	
-	e.g. /localhost:27017/docs
-	
-Return a JSON document with the names of all collections in a database
-		
-	GET /docs/{host}/{database}
+	e.g. /localhost:27017/docs , /localhost/docs
 
-Return a JSON document from a collection using its _id
+returns a JSON document with the names of all databases	
+			
+	GET /docs/{hostport}/{database}
 	
-	GET /docs/{host}/{database}/{collection}/{_id}
-		
-Return a JSON document with the first (max 10) documents in a collection			
+returns a JSON document with the names of all collections in a database	
+	
+	GET /docs/{hostport}/{database}/{collection}/{_id}
 
-	GET /docs/{host}/{database}/{collection}
-					
-Store a JSON document in a colllection
+returns a JSON document from a collection using its _id							
 
-	PUT /docs/{host}/{database}/{collection}/{_id}
-	(todo) POST /docs/{host}/{database}/{collection}
+	GET /docs/{hostport}/{database}/{collection}
+	
+returns a JSON document with the first (max 10) documents in a collection								
+
+	PUT /docs/{hostport}/{database}/{collection}/{_id}
+	(todo) POST /docs/{hostport}/{database}/{collection}
+	
+stores a JSON document in a colllection	
+
 
 Install
 						
