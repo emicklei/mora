@@ -20,6 +20,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.GET("/{hostport}").To(d.getAllDatabaseNames).
 		Doc("Return all database names").
+		Operation("getAllDatabaseNames").
 		Param(hostport).
 		Writes(""))
 
@@ -27,6 +28,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.GET("/{hostport}/{database}").To(d.getAllCollectionNames).
 		Doc("Return all collections for the database").
+		Operation("getAllCollectionNames").
 		Param(hostport).
 		Param(database).
 		Writes(""))
@@ -36,6 +38,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.GET("/{hostport}/{database}/{collection}/{_id}").To(d.getDocument).
 		Doc("Return a document from a collection from the database by its internal _id").
+		Operation("getDocument").
 		Param(hostport).
 		Param(database).
 		Param(collection).
@@ -44,6 +47,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.PUT("/{hostport}/{database}/{collection}/{_id}").To(d.putDocument).
 		Doc("Store a document to a collection from the database using its internal _id").
+		Operation("putDocument").
 		Param(hostport).
 		Param(database).
 		Param(collection).
@@ -53,6 +57,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.POST("/{hostport}/{database}/{collection}").To(d.postDocument).
 		Doc("Store a document to a collection from the database").
+		Operation("postDocument").
 		Param(hostport).
 		Param(database).
 		Param(collection).
@@ -61,6 +66,7 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.GET("/{hostport}/{database}/{collection}").To(d.getDocuments).
 		Doc("Return documents (max 10) from a collection from the database.").
+		Operation("getDocuments").
 		Param(hostport).
 		Param(database).
 		Param(collection).
