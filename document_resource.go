@@ -72,6 +72,16 @@ func (d DocumentResource) Register() {
 		Param(collection).
 		Writes(""))
 
+	ws.Route(ws.GET("/{hostport}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
+		Doc("Get a partial document using the internal _id and fields (comma separated field names)").
+		Operation("getSubDocument").
+		Param(hostport).
+		Param(database).
+		Param(collection).
+		Param(id).
+		Reads("").
+		Writes(""))
+
 	restful.Add(ws)
 }
 
@@ -147,14 +157,33 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 	if needsClose {
 		defer func() { session.Close() }()
 	}
-	col := d.getMongoCollection(req, session)
+	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), bson.M{}, resp)
+}
+
+func (d DocumentResource) getSubDocument(req *restful.Request, resp *restful.Response) {
+	session, needsClose, err := d.getMongoSession(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
+	if needsClose {
+		defer func() { session.Close() }()
+	}
+	fields := req.PathParameter("fields")
+	selector := bson.M{}
+	for _, each := range strings.Split(fields, ",") {
+		selector[each] = 1
+	}
+	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), selector, resp)
+}
+
+func (d DocumentResource) fetchDocument(col *mgo.Collection, id string, selector bson.M, resp *restful.Response) {
 	doc := bson.M{}
-	id := req.PathParameter("_id")
 	var finderr error
 	if bson.IsObjectIdHex(id) {
-		finderr = col.FindId(bson.ObjectIdHex(id)).One(&doc)
+		finderr = col.FindId(bson.ObjectIdHex(id)).Select(selector).One(&doc)
 	} else {
-		finderr = col.Find(bson.M{"_id": id}).One(&doc)
+		finderr = col.Find(bson.M{"_id": id}).Select(selector).One(&doc)
 	}
 	if finderr != nil {
 		if "not found" == finderr.Error() {
