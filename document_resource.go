@@ -20,14 +20,16 @@ func (d DocumentResource) Register() {
 
 	ws.Route(ws.GET("/{hostport}").To(d.getAllDatabaseNames).
 		Doc("Return all database names").
-		Param(hostport))
+		Param(hostport).
+		Writes(""))
 
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
 
 	ws.Route(ws.GET("/{hostport}/{database}").To(d.getAllCollectionNames).
 		Doc("Return all collections for the database").
 		Param(hostport).
-		Param(database))
+		Param(database).
+		Writes(""))
 
 	collection := ws.PathParameter("collection", "Collection name from the database")
 	id := ws.PathParameter("_id", "Storage identifier of the document")
@@ -37,26 +39,32 @@ func (d DocumentResource) Register() {
 		Param(hostport).
 		Param(database).
 		Param(collection).
-		Param(id))
+		Param(id).
+		Writes(""))
 
 	ws.Route(ws.PUT("/{hostport}/{database}/{collection}/{_id}").To(d.putDocument).
 		Doc("Store a document to a collection from the database using its internal _id").
 		Param(hostport).
 		Param(database).
 		Param(collection).
-		Param(id))
+		Param(id).
+		Reads("").
+		Writes(""))
 
 	ws.Route(ws.POST("/{hostport}/{database}/{collection}").To(d.postDocument).
 		Doc("Store a document to a collection from the database").
 		Param(hostport).
 		Param(database).
-		Param(collection))
+		Param(collection).
+		Reads("").
+		Writes(""))
 
 	ws.Route(ws.GET("/{hostport}/{database}/{collection}").To(d.getDocuments).
 		Doc("Return documents (max 10) from a collection from the database.").
 		Param(hostport).
 		Param(database).
-		Param(collection))
+		Param(collection).
+		Writes(""))
 
 	restful.Add(ws)
 }
@@ -155,7 +163,28 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 	resp.WriteEntity(doc)
 }
 
+// TODO check for conflict
 func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
+	session, needsClose, err := d.getMongoSession(req)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
+	if needsClose {
+		defer func() { session.Close() }()
+	}
+	col := d.getMongoCollection(req, session)
+	doc := bson.M{"_id": req.PathParameter("_id")}
+	req.ReadEntity(&doc)
+	err = col.Insert(doc)
+	if err != nil {
+		resp.WriteError(500, err)
+		return
+	}
+	resp.WriteHeader(http.StatusCreated)
+}
+
+func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
 		resp.WriteError(500, err)
@@ -170,14 +199,9 @@ func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Respon
 	err = col.Insert(doc)
 	if err != nil {
 		resp.WriteError(500, err)
+		return
 	}
 	resp.WriteHeader(http.StatusCreated)
-	//resp.Write([]byte("201: Created")) json version?
-}
-
-func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Response) {
-	//col := d.getMongoCollection(req)
-	//doc := bson.M{}
 }
 
 func (d DocumentResource) getMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
