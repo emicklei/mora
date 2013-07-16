@@ -34,12 +34,17 @@ returns a JSON document from a collection using its _id
 
 	GET /docs/{hostport}/{database}/{collection}
 	
-returns a JSON document with the first (max 10) documents in a collection								
+returns a JSON document with the first (max 10) documents in a collection		
 
 	PUT /docs/{hostport}/{database}/{collection}/{_id}
 	(todo) POST /docs/{hostport}/{database}/{collection}
 	
 stores a JSON document in a colllection	
+
+	GET /{hostport}/{database}/{collection}/{_id}/{fields}
+
+returns selected fields of a JSON document. Currently, the fields parameter must be
+a comma separated list of known fields. The document returned will always contains the internal _id.
 
 
 Install
