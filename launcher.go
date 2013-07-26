@@ -12,8 +12,8 @@ import (
 var propertiesFile = flag.String("config", "mora.properties", "the configuration file")
 
 func main() {
-	info("loading configuration from [%s]", *propertiesFile)
 	flag.Parse()
+	info("loading configuration from [%s]", *propertiesFile)
 	props, err := properties.Load(*propertiesFile)
 	if err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
