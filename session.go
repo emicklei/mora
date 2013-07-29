@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/emicklei/goproperties"
 	"labix.org/v2/mgo"
 	"sync"
 )
@@ -33,7 +34,8 @@ func closeSession(hostport string) {
 }
 
 // hostport like localhost:27017
-func openSession(hostport string) (*mgo.Session, bool, error) {
+func openSession(config properties.Properties) (*mgo.Session, bool, error) {
+	hostport := config["host"] + ":" + config["port"]
 	sessionAccessMutex.RLock()
 	existing := sessions[hostport]
 	sessionAccessMutex.RUnlock()
@@ -41,7 +43,7 @@ func openSession(hostport string) (*mgo.Session, bool, error) {
 		return existing.Clone(), true, nil
 	}
 	sessionAccessMutex.Lock()
-	info("connecting to [%s]", hostport)
+	info("connecting to [%s=%s]", config["alias"], hostport)
 	newSession, err := mgo.Dial(hostport)
 	if err != nil {
 		info("unable to connect to [%s] because:%v", hostport, err)

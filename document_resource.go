@@ -16,9 +16,9 @@ func (d DocumentResource) Register() {
 	ws.Path("/docs")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
-	hostport := ws.PathParameter("hostport", "Address of the MongoDB instance, e.g. localhost:27017")
+	hostport := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 
-	ws.Route(ws.GET("/{hostport}").To(d.getAllDatabaseNames).
+	ws.Route(ws.GET("/{alias}").To(d.getAllDatabaseNames).
 		Doc("Return all database names").
 		Operation("getAllDatabaseNames").
 		Param(hostport).
@@ -26,7 +26,7 @@ func (d DocumentResource) Register() {
 
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
 
-	ws.Route(ws.GET("/{hostport}/{database}").To(d.getAllCollectionNames).
+	ws.Route(ws.GET("/{alias}/{database}").To(d.getAllCollectionNames).
 		Doc("Return all collections for the database").
 		Operation("getAllCollectionNames").
 		Param(hostport).
@@ -36,7 +36,7 @@ func (d DocumentResource) Register() {
 	collection := ws.PathParameter("collection", "Collection name from the database")
 	id := ws.PathParameter("_id", "Storage identifier of the document")
 
-	ws.Route(ws.GET("/{hostport}/{database}/{collection}/{_id}").To(d.getDocument).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}").To(d.getDocument).
 		Doc("Return a document from a collection from the database by its internal _id").
 		Operation("getDocument").
 		Param(hostport).
@@ -45,7 +45,7 @@ func (d DocumentResource) Register() {
 		Param(id).
 		Writes(""))
 
-	ws.Route(ws.PUT("/{hostport}/{database}/{collection}/{_id}").To(d.putDocument).
+	ws.Route(ws.PUT("/{alias}/{database}/{collection}/{_id}").To(d.putDocument).
 		Doc("Store a document to a collection from the database using its internal _id").
 		Operation("putDocument").
 		Param(hostport).
@@ -55,7 +55,7 @@ func (d DocumentResource) Register() {
 		Reads("").
 		Writes(""))
 
-	ws.Route(ws.POST("/{hostport}/{database}/{collection}").To(d.postDocument).
+	ws.Route(ws.POST("/{alias}/{database}/{collection}").To(d.postDocument).
 		Doc("Store a document to a collection from the database").
 		Operation("postDocument").
 		Param(hostport).
@@ -64,7 +64,7 @@ func (d DocumentResource) Register() {
 		Reads("").
 		Writes(""))
 
-	ws.Route(ws.GET("/{hostport}/{database}/{collection}").To(d.getDocuments).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(d.getDocuments).
 		Doc("Return documents (max 10) from a collection from the database.").
 		Operation("getDocuments").
 		Param(hostport).
@@ -72,7 +72,7 @@ func (d DocumentResource) Register() {
 		Param(collection).
 		Writes(""))
 
-	ws.Route(ws.GET("/{hostport}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
 		Doc("Get a partial document using the internal _id and fields (comma separated field names)").
 		Operation("getSubDocument").
 		Param(hostport).
@@ -87,7 +87,7 @@ func (d DocumentResource) Register() {
 
 func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restful.Response) {
 	// filter invalids
-	hostport := req.PathParameter("hostport")
+	hostport := req.PathParameter("alias")
 	if hostport == "" || strings.Index(hostport, ".") != -1 {
 		resp.WriteHeader(http.StatusBadRequest)
 		return
@@ -244,12 +244,12 @@ func (d DocumentResource) getMongoCollection(req *restful.Request, session *mgo.
 }
 
 func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, bool, error) {
-	hostport := req.PathParameter("hostport")
-	if strings.Index(hostport, ":") == -1 {
-		// append default port
-		hostport += ":27017"
+	alias := req.PathParameter("alias")
+	config, err := configuration(alias)
+	if err != nil {
+		return nil, false, err
 	}
-	session, needsClose, err := openSession(hostport)
+	session, needsClose, err := openSession(config)
 	if err != nil {
 		return nil, false, err
 	}

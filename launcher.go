@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/dmotylev/goproperties"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
+	"github.com/emicklei/goproperties"
 	"log"
 	"net/http"
 )
@@ -18,6 +18,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
 	}
+	initConfiguration(props)
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON

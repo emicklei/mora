@@ -8,40 +8,40 @@
 
 returns the document from
 
- - hostport=localhost, mongodb hosted on localhost (no port so using default :27017)
+ - alias=localhost, mongodb hosted on localhost (aliases are defined in properties file)
  - database=landskape
  - collection=connections
  - _id=51caec2e95c51cb63a584fde
 
 ##### API	
 			
-	GET /docs/{hostport}
+	GET /docs/{alias}
 	
-	hostport ::= <address>[:<port>]
-	address  ::= <hostname>|<ip>
+	In the configuration file: (e.g. mora.properties)
 	
-	e.g. /localhost:27017/docs , /localhost/docs
+	mongod.{alias}.host=localhost
+	mongod.{alias}.port=27017
 
 returns a JSON document with the names of all databases	
 			
-	GET /docs/{hostport}/{database}
+	GET /docs/{alias}/{database}
 	
 returns a JSON document with the names of all collections in a database	
 	
-	GET /docs/{hostport}/{database}/{collection}/{_id}
+	GET /docs/{alias}/{database}/{collection}/{_id}
 
 returns a JSON document from a collection using its _id							
 
-	GET /docs/{hostport}/{database}/{collection}
+	GET /docs/{alias}/{database}/{collection}
 	
 returns a JSON document with the first (max 10) documents in a collection		
 
-	PUT /docs/{hostport}/{database}/{collection}/{_id}
-	(todo) POST /docs/{hostport}/{database}/{collection}
+	PUT /docs/{alias}/{database}/{collection}/{_id}
+	(todo) POST /docs/{alias}/{database}/{collection}
 	
 stores a JSON document in a colllection	
 
-	GET /{hostport}/{database}/{collection}/{_id}/{fields}
+	GET /{alias}/{database}/{collection}/{_id}/{fields}
 
 returns selected fields of a JSON document. Currently, the fields parameter must be
 a comma separated list of known fields. The document returned will always contains the internal _id.
