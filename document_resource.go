@@ -65,11 +65,16 @@ func (d DocumentResource) Register() {
 		Writes(""))
 
 	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(d.getDocuments).
-		Doc("Return documents (max 10) from a collection from the database.").
+		Doc("Return documents (max 10 by default) from a collection from the database.").
 		Operation("getDocuments").
 		Param(hostport).
 		Param(database).
 		Param(collection).
+		Param(ws.QueryParameter("query", "query in json format")).
+		Param(ws.QueryParameter("fields", "comma separated list of field names")).
+		Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
+		Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
+		Param(ws.QueryParameter("sort", "comma separated list of field names")).
 		Writes(""))
 
 	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
@@ -94,7 +99,7 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 	}
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -102,8 +107,7 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 	}
 	names, err := session.DatabaseNames()
 	if err != nil {
-		log.Printf("[mora] error:%v", err)
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	resp.WriteEntity(names)
@@ -112,7 +116,7 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -121,8 +125,7 @@ func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *rest
 	dbname := req.PathParameter("database")
 	names, err := session.DB(dbname).CollectionNames()
 	if err != nil {
-		log.Printf("[mora] error:%v", err)
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	resp.WriteEntity(names)
@@ -131,27 +134,35 @@ func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *rest
 func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
 		defer func() { session.Close() }()
 	}
 	col := d.getMongoCollection(req, session)
-	query := col.Find(bson.M{}) // all
-	query.Limit(10)
+	query, err := d.composeQuery(col, req)
+	if err != nil {
+		resp.WriteError(400, err) // TODO handleError(err, resp)
+	}
 	result := []bson.M{}
 	err = query.All(&result)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 	}
 	resp.WriteEntity(result)
+}
+
+func (d DocumentResource) composeQuery(col *mgo.Collection, req *restful.Request) (*mgo.Query, error) {
+	query := col.Find(bson.M{}) // all
+	query.Limit(10)
+	return query, nil
 }
 
 func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -163,7 +174,7 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 func (d DocumentResource) getSubDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -186,14 +197,7 @@ func (d DocumentResource) fetchDocument(col *mgo.Collection, id string, selector
 		finderr = col.Find(bson.M{"_id": id}).Select(selector).One(&doc)
 	}
 	if finderr != nil {
-		if "not found" == finderr.Error() {
-			resp.WriteError(404, finderr)
-			return
-		} else {
-			log.Printf("[mora] error:%v", finderr)
-			resp.WriteError(500, finderr)
-			return
-		}
+		handleError(finderr, resp)
 	}
 	resp.WriteEntity(doc)
 }
@@ -202,7 +206,7 @@ func (d DocumentResource) fetchDocument(col *mgo.Collection, id string, selector
 func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -213,7 +217,7 @@ func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Respon
 	req.ReadEntity(&doc)
 	err = col.Insert(doc)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	resp.WriteHeader(http.StatusCreated)
@@ -222,7 +226,7 @@ func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Respon
 func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.getMongoSession(req)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	if needsClose {
@@ -233,7 +237,7 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	req.ReadEntity(&doc)
 	err = col.Insert(doc)
 	if err != nil {
-		resp.WriteError(500, err)
+		handleError(err, resp)
 		return
 	}
 	resp.WriteHeader(http.StatusCreated)
@@ -254,4 +258,17 @@ func (d DocumentResource) getMongoSession(req *restful.Request) (*mgo.Session, b
 		return nil, false, err
 	}
 	return session, needsClose, nil
+}
+
+func handleError(err error, resp *restful.Response) {
+	if err.Error() == "not found" {
+		resp.WriteError(http.StatusNotFound, err)
+		return
+	}
+	if err.Error() == "unauthorized" {
+		resp.WriteError(http.StatusUnauthorized, err)
+		return
+	}
+	log.Printf("[mora] error:%v", err)
+	resp.WriteError(500, err)
 }

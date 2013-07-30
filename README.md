@@ -21,6 +21,10 @@ returns the document from
 	
 	mongod.{alias}.host=localhost
 	mongod.{alias}.port=27017
+	# optional
+	mongod.{alias}.username=
+	mongod.{alias}.password=
+	mongod.{alias}.database=
 
 returns a JSON document with the names of all databases	
 			

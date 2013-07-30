@@ -33,7 +33,6 @@ func closeSession(hostport string) {
 	sessionAccessMutex.Unlock()
 }
 
-// hostport like localhost:27017
 func openSession(config properties.Properties) (*mgo.Session, bool, error) {
 	hostport := config["host"] + ":" + config["port"]
 	sessionAccessMutex.RLock()
@@ -44,7 +43,14 @@ func openSession(config properties.Properties) (*mgo.Session, bool, error) {
 	}
 	sessionAccessMutex.Lock()
 	info("connecting to [%s=%s]", config["alias"], hostport)
-	newSession, err := mgo.Dial(hostport)
+	dialInfo := mgo.DialInfo{
+		Addrs:    []string{hostport},
+		Direct:   true,
+		Database: config["database"],
+		Username: config["username"],
+		Password: config["password"],
+	}
+	newSession, err := mgo.DialWithInfo(&dialInfo)
 	if err != nil {
 		info("unable to connect to [%s] because:%v", hostport, err)
 		newSession = nil
