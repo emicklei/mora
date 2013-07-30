@@ -37,6 +37,8 @@ func main() {
 		SwaggerFilePath: props["swagger.file.path"]}
 	swagger.InstallSwaggerService(config)
 
+	http.HandleFunc("/", index)
+
 	info("ready to serve on %s", basePath)
 	log.Fatal(http.ListenAndServe(":"+props["http.server.port"], nil))
 }

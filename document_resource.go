@@ -16,12 +16,17 @@ func (d DocumentResource) Register() {
 	ws.Path("/docs")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
-	hostport := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
+	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
+
+	ws.Route(ws.GET("/").To(d.getAllAliases).
+		Doc("Return all Mongo DB aliases from the configuration").
+		Operation("getAllAliases").
+		Writes(""))
 
 	ws.Route(ws.GET("/{alias}").To(d.getAllDatabaseNames).
 		Doc("Return all database names").
 		Operation("getAllDatabaseNames").
-		Param(hostport).
+		Param(alias).
 		Writes(""))
 
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
@@ -29,7 +34,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.GET("/{alias}/{database}").To(d.getAllCollectionNames).
 		Doc("Return all collections for the database").
 		Operation("getAllCollectionNames").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Writes(""))
 
@@ -39,7 +44,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}").To(d.getDocument).
 		Doc("Return a document from a collection from the database by its internal _id").
 		Operation("getDocument").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id).
@@ -48,7 +53,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.PUT("/{alias}/{database}/{collection}/{_id}").To(d.putDocument).
 		Doc("Store a document to a collection from the database using its internal _id").
 		Operation("putDocument").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id).
@@ -58,7 +63,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.POST("/{alias}/{database}/{collection}").To(d.postDocument).
 		Doc("Store a document to a collection from the database").
 		Operation("postDocument").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Param(collection).
 		Reads("").
@@ -67,7 +72,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(d.getDocuments).
 		Doc("Return documents (max 10 by default) from a collection from the database.").
 		Operation("getDocuments").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(ws.QueryParameter("query", "query in json format")).
@@ -80,7 +85,7 @@ func (d DocumentResource) Register() {
 	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
 		Doc("Get a partial document using the internal _id and fields (comma separated field names)").
 		Operation("getSubDocument").
-		Param(hostport).
+		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id).
@@ -88,6 +93,14 @@ func (d DocumentResource) Register() {
 		Writes(""))
 
 	restful.Add(ws)
+}
+
+func (d DocumentResource) getAllAliases(req *restful.Request, resp *restful.Response) {
+	aliases := []string{}
+	for k, _ := range configurationMap {
+		aliases = append(aliases, k)
+	}
+	resp.WriteAsJson(aliases)
 }
 
 func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restful.Response) {
