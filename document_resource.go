@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/emicklei/go-restful"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -157,18 +159,68 @@ func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Respo
 	query, err := d.composeQuery(col, req)
 	if err != nil {
 		resp.WriteError(400, err) // TODO handleError(err, resp)
+		return
 	}
 	result := []bson.M{}
 	err = query.All(&result)
 	if err != nil {
 		handleError(err, resp)
+		return
 	}
 	resp.WriteEntity(result)
 }
 
+//Param(ws.QueryParameter("query", "query in json format")).
+//Param(ws.QueryParameter("fields", "comma separated list of field names")).
+//Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
+//Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
+//Param(ws.QueryParameter("sort", "comma separated list of field names")).
 func (d DocumentResource) composeQuery(col *mgo.Collection, req *restful.Request) (*mgo.Query, error) {
-	query := col.Find(bson.M{}) // all
-	query.Limit(10)
+	expression := bson.M{}
+	qp := req.QueryParameter("query")
+	if len(qp) > 0 {
+		log.Println("query=" + qp)
+		if err := json.Unmarshal([]byte(qp), &expression); err != nil {
+			return nil, err
+		}
+		log.Printf("expression=%v\n", expression)
+	}
+	query := col.Find(expression)
+
+	selection := bson.M{}
+	fields := req.QueryParameter("fields")
+	if len(fields) > 0 {
+		for _, v := range strings.Split(fields, ",") {
+			selection[v] = 1
+		}
+	}
+	query.Select(selection)
+
+	skip := req.QueryParameter("skip")
+	if len(skip) > 0 {
+		v, err := strconv.Atoi(skip)
+		if err != nil {
+			return nil, err
+		}
+		query.Skip(v)
+	} else {
+		query.Skip(0)
+	}
+	limit := req.QueryParameter("limit")
+	if len(limit) > 0 {
+		v, err := strconv.Atoi(limit)
+		if err != nil {
+			return nil, err
+		}
+		query.Limit(v)
+	} else {
+		query.Limit(10)
+	}
+	sort := req.QueryParameter("sort")
+	if len(sort) > 0 {
+		query.Sort(strings.Split(sort, ",")...)
+	}
+
 	return query, nil
 }
 
