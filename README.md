@@ -43,7 +43,16 @@ returns a JSON document from a collection using its _id
 
 	GET /docs/{alias}/{database}/{collection}
 	
-returns a JSON document with the first (max 10) documents in a collection		
+returns a JSON document with the first (default 10) documents in a collection.
+This method also accepts query paramters
+
+ - query, use mongo shell syntax, e.g. {"size":42}
+ - limit , maximum number of documents in the result
+ - skip, offset in the result set
+ - fields, comma separated list of (path-dotted) field names
+ - sort, use mongo shell syntax, e.g. {"date": -1} = descending on date
+
+Query paramters are optional. Default values are used if left out.
 
 	PUT /docs/{alias}/{database}/{collection}/{_id}
 	(todo) POST /docs/{alias}/{database}/{collection}
