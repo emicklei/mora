@@ -1,4 +1,4 @@
-# Mora - MongoDB Rest API
+# ![](Letter-M-icon.png) Mora - MongoDB Rest API
 
 #### generic REST server in Go for accessing MongoDB documents and meta data
 	
@@ -63,7 +63,9 @@ Run
 
 	./mora -config mora.properties
 	
-&copy; 2013, http://ernestmicklei.com. MIT License	
+&copy; 2013, http://ernestmicklei.com. MIT License
+ - Icons from http://www.iconarchive.com, CC Attribution 3.0
+ - Swagger from https://github.com/wordnik/swagger-core/wiki, Apache License, Version 2.0 	
 
 ## Mora API Web UI
-![Mora UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-07-14-swagger.png)
+![Mora UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-08-04.png)

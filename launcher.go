@@ -38,6 +38,7 @@ func main() {
 	swagger.InstallSwaggerService(config)
 
 	http.HandleFunc("/", index)
+	http.HandleFunc("/favion.ico", icon)
 
 	info("ready to serve on %s", basePath)
 	log.Fatal(http.ListenAndServe(":"+props["http.server.port"], nil))
