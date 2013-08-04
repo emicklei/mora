@@ -1,11 +1,17 @@
-#go get -v -u github.com/emicklei/goproperties
-#go get -v -u github.com/emicklei/go-restful
+export GOPATH=`pwd`
+go get -v -u github.com/emicklei/goproperties
+go get -v -u github.com/emicklei/go-restful
+go get -v -u labix.org/v2/mgo
 go build *.go
 rm -rf target
 mkdir -p target/swagger-ui
 mv configuration ./target/mora
 cp mora.properties ./target
-cp -r /Users/ernest/Projects/swagger-ui/dist ./target/swagger-ui/dist
+
+if [ ! -d ./swagger-ui ]; then
+  git clone https://github.com/wordnik/swagger-ui.git
+fi
+cp -r ./swagger-ui/dist ./target/swagger-ui/dist
 
 # apply patches
 cp patches/index.html ./target/swagger-ui/dist
