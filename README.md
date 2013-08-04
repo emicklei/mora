@@ -13,11 +13,15 @@ returns the document from
  - collection=connections
  - _id=51caec2e95c51cb63a584fde
 
-##### API	
+#### API	
 			
+	GET /docs
+
+returns a JSON document with known aliases
+	
 	GET /docs/{alias}
 	
-	In the configuration file: (e.g. mora.properties)
+In the configuration file: (e.g. mora.properties)
 	
 	mongod.{alias}.host=localhost
 	mongod.{alias}.port=27017
@@ -25,6 +29,7 @@ returns the document from
 	mongod.{alias}.username=
 	mongod.{alias}.password=
 	mongod.{alias}.database=
+
 
 returns a JSON document with the names of all databases	
 			
@@ -51,15 +56,15 @@ returns selected fields of a JSON document. Currently, the fields parameter must
 a comma separated list of known fields. The document returned will always contains the internal _id.
 
 
-Install
+### Install
 						
 	go get -u github.com/emicklei/mora
 	
-Build (inside mora folder)
+### Build
 	
 	go build 
 
-Run
+### Run
 
 	./mora -config mora.properties
 	
