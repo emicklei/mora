@@ -1,9 +1,6 @@
 .DS_Store
-
 mora
-
 bol.properties
-
 target
-
-.DS_Store
+swagger-ui
+src
