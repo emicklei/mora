@@ -50,7 +50,7 @@ This method also accepts query paramters
  - limit , maximum number of documents in the result
  - skip, offset in the result set
  - fields, comma separated list of (path-dotted) field names
- - sort, use mongo shell syntax, e.g. {"date": -1} = descending on date
+ - sort, comma separated list of (path-dotted) field names
 
 Query paramters are optional. Default values are used if left out.
 

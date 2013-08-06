@@ -3,7 +3,6 @@ go get -v -u github.com/emicklei/goproperties
 go get -v -u github.com/emicklei/go-restful
 go get -v -u labix.org/v2/mgo
 go build *.go
-rm -rf target
 mkdir -p target/swagger-ui
 mv configuration ./target/mora
 cp mora.properties ./target
@@ -20,6 +19,7 @@ cp patches/mora.ico ./target/swagger-ui/dist/images
 sed "s/89bf04/89bfAA/" ./target/swagger-ui/dist/css/screen.css > ./target/swagger-ui/dist/css/screen-mora.css
 
 cd target
+	rm -f mora.zip
 	zip -r mora.zip .
 	cd ..
 ls -l target
