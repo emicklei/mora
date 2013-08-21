@@ -33,8 +33,9 @@ func main() {
 		WebServices:     restful.RegisteredWebServices(),
 		WebServicesUrl:  basePath,
 		ApiPath:         "/apidocs.json",
-		SwaggerPath:     "/apidocs/",
-		SwaggerFilePath: props["swagger.file.path"]}
+		SwaggerPath:     props["swagger.path"],
+		SwaggerFilePath: props["swagger.file.path"],
+	}
 	swagger.InstallSwaggerService(config)
 
 	http.HandleFunc("/", index)
