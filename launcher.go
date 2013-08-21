@@ -9,13 +9,16 @@ import (
 	"net/http"
 )
 
-var propertiesFile = flag.String("config", "mora.properties", "the configuration file")
+var (
+	props properties.Properties
+	propertiesFile = flag.String("config", "mora.properties", "the configuration file")
+)
 
 func main() {
 	flag.Parse()
 	info("loading configuration from [%s]", *propertiesFile)
-	props, err := properties.Load(*propertiesFile)
-	if err != nil {
+	var err error
+	if props, err = properties.Load(*propertiesFile); err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
 	}
 	initConfiguration(props)
@@ -38,7 +41,10 @@ func main() {
 	}
 	swagger.InstallSwaggerService(config)
 
-	http.HandleFunc("/", index)
+	log.Println("swagger.path is "+ props["swagger.path"])
+	if props["swagger.path"] != "/" {
+		http.HandleFunc("/", index)
+	}
 	http.HandleFunc("/favion.ico", icon)
 
 	info("ready to serve on %s", basePath)
