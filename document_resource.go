@@ -19,7 +19,11 @@ func (d DocumentResource) Register() {
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
-
+	
+	if props.GetBool("http.server.cors", false) {
+		ws.Filter(enableCORS)
+	}
+	
 	ws.Route(ws.GET("/").To(d.getAllAliases).
 		Doc("Return all Mongo DB aliases from the configuration").
 		Operation("getAllAliases"))
