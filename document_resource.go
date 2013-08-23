@@ -20,6 +20,11 @@ func (d DocumentResource) Register() {
 	ws.Produces(restful.MIME_JSON)
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 
+	if props.GetBool("http.server.cors", false) {
+		ws.Filter(enableCORS)
+		ws.Route(ws.Method("OPTIONS").Path("/{alias}/{database}/{collection}/{_id}").To(requestOK))
+	}
+
 	ws.Route(ws.GET("/").To(d.getAllAliases).
 		Doc("Return all Mongo DB aliases from the configuration").
 		Operation("getAllAliases"))
@@ -327,4 +332,19 @@ func handleError(err error, resp *restful.Response) {
 	}
 	log.Printf("[mora] error:%v", err)
 	resp.WriteError(500, err)
+}
+
+func requestOK(req *restful.Request, resp *restful.Response) {
+	resp.WriteHeader(http.StatusOK)
+}
+
+func enableCORS(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	if origin := req.Request.Header.Get("Origin"); origin != "" {
+		resp.AddHeader("Access-Control-Allow-Origin", origin)
+	} else {
+		resp.AddHeader("Access-Control-Allow-Origin", "*")
+	}
+
+	resp.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	chain.ProcessFilter(req, resp)
 }
