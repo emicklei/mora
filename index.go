@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"log"
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
