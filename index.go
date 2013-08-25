@@ -1,12 +1,8 @@
 package main
 
-import (
-	"net/http"
-	"log"
-)
+import "net/http"
 
 func index(w http.ResponseWriter, r *http.Request) {
-	log.Println("Redirecting to "+ props["swagger.path"])
 	http.Redirect(w, r, props["swagger.path"], http.StatusMovedPermanently)
 }
 
