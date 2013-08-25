@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+var corsRoutes = []string{
+	"/{alias}/{database}/{collection}/{_id}",
+	"/{alias}/{database}/{collection}",
+	"/{alias}/{database}",
+}
+
 type DocumentResource struct{}
 
 func (d DocumentResource) Register() {
@@ -22,7 +28,9 @@ func (d DocumentResource) Register() {
 
 	if props.GetBool("http.server.cors", false) {
 		ws.Filter(enableCORS)
-		ws.Route(ws.Method("OPTIONS").Path("/{alias}/{database}/{collection}/{_id}").To(requestOK))
+		for i := 0; i < len(corsRoutes); i++ {
+			ws.Route(ws.Method("OPTIONS").Path(corsRoutes[i]).To(requestOK))
+		}
 	}
 
 	ws.Route(ws.GET("/").To(d.getAllAliases).
@@ -380,5 +388,6 @@ func enableCORS(req *restful.Request, resp *restful.Response, chain *restful.Fil
 	}
 
 	resp.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	resp.AddHeader("Access-Control-Allow-Headers", "Content-Type")
 	chain.ProcessFilter(req, resp)
 }
