@@ -41,7 +41,6 @@ func main() {
 	}
 	swagger.InstallSwaggerService(config)
 
-	log.Println("swagger.path is "+ props["swagger.path"])
 	if props["swagger.path"] != "/" {
 		http.HandleFunc("/", index)
 	}
