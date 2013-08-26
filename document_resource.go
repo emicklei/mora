@@ -338,12 +338,15 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
+	if doc["_id"] == nil || !bson.IsObjectIdHex(doc["_id"].(string)) {
+		doc["_id"] = bson.NewObjectId()
+	}
 	err = col.Insert(doc)
 	if err != nil {
 		handleError(err, resp)
 		return
 	}
-	resp.WriteHeader(http.StatusCreated)
+	resp.WriteEntity(doc)
 }
 
 func (d DocumentResource) getMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
