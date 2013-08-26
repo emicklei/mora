@@ -1,35 +1,27 @@
 # ![](Letter-M-icon.png) Mora - MongoDB Rest API
 
-#### generic REST server in Go for accessing MongoDB documents and meta data
+#### Generic REST server for accessing MongoDB documents and meta data
 	
 ##### Example		
 	
 	http://localhost:8181/docs/localhost/landskape/connections/51caec2e95c51cb63a584fde	
 
-returns the document from
+Returns the document from
 
- - alias=localhost, mongodb hosted on localhost (aliases are defined in properties file)
- - database=landskape
- - collection=connections
- - _id=51caec2e95c51cb63a584fde
+	http://localhost:8181/docs/{alias}/{database}/{collection}/{_id}
 
-#### API	
+ - alias: localhost (alias is a name for particular MongoDB Server defined in configuration file)
+ - database: landskape
+ - collection: connections
+ - _id: 51caec2e95c51cb63a584fde
+
+#### API
 			
 	GET /docs
 
 returns a JSON document with known aliases
 	
 	GET /docs/{alias}
-	
-In the configuration file: (e.g. mora.properties)
-	
-	mongod.{alias}.host=localhost
-	mongod.{alias}.port=27017
-	# optional
-	mongod.{alias}.username=
-	mongod.{alias}.password=
-	mongod.{alias}.database=
-
 
 returns a JSON document with the names of all databases	
 			
@@ -72,6 +64,29 @@ a comma separated list of known fields. The document returned will always contai
 ### Build
 	
 	go build 
+	
+### Configuration
+	
+	# mora server settings:
+	http.server.host=localhost
+	http.server.port=8181
+	# enable cross site requests
+	http.server.cors=true
+	
+	# alias is a name for particular MongoDB Server
+	# you can define as many aliases as you want
+	mongod.{alias}.host=localhost
+	mongod.{alias}.port=27017
+	# optional
+	mongod.{alias}.username=
+	mongod.{alias}.password=
+	mongod.{alias}.database=
+	
+	# moro api documentation
+	http.server.api.docs.enable = true
+	http.server.api.docs.swagger = ./swagger-ui/dist
+	http.server.api.docs.path = /apidocs.json
+	http.server.api.docs.ui = /apidocs
 
 ### Run
 
