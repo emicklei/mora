@@ -255,14 +255,14 @@ func (d DocumentResource) deleteDocument(req *restful.Request, resp *restful.Res
 		return
 	}
 	if needsClose {
-		defer session.Close()	
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
-	if bson.IsObjectIdHex(id) {
-		err = col.RemoveId(bson.ObjectIdHex(id))
-	} else {
-		err = col.Remove(bson.M{"_id": id})
+
+	err = col.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
+	if err != nil && err.String() == "not found" {
+		err = col.Remove(bson.M{"_id": id}) // sometimes it happens that id is not ObjectId
 	}
 
 	if err != nil {
@@ -314,9 +314,10 @@ func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Respon
 		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
-	id := req.PathParameter("_id")
-	doc := bson.M{"_id": id}
+	id := bson.ObjectIdHex(req.PathParameter("_id"))
+	doc := bson.M{}
 	req.ReadEntity(&doc)
+	doc["_id"] = id
 	if _, err = col.UpsertId(id, doc); err != nil {
 		handleError(err, resp)
 		return
@@ -339,7 +340,6 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	if doc["_id"] == nil || !bson.IsObjectIdHex(doc["_id"].(string)) {
 		doc["_id"] = bson.NewObjectId()
 	}
-
 	if err = col.Insert(doc); err != nil {
 		handleError(err, resp)
 		return
