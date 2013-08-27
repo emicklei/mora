@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+// These are the route path for which CORS is allowed
+// http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
 var corsRoutes = []string{
 	"/{alias}/{database}/{collection}/{_id}",
 	"/{alias}/{database}/{collection}",
@@ -27,9 +29,9 @@ func (d DocumentResource) Register() {
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 
 	if props.GetBool("http.server.cors", false) {
-		ws.Filter(enableCORS)
+		ws.Filter(enableCORSFilter)
 		for i := 0; i < len(corsRoutes); i++ {
-			ws.Route(ws.Method("OPTIONS").Path(corsRoutes[i]).To(requestOK))
+			ws.Route(ws.Method("OPTIONS").Path(corsRoutes[i]).To(optionsOK))
 		}
 	}
 
@@ -271,7 +273,7 @@ func (d DocumentResource) deleteDocument(req *restful.Request, resp *restful.Res
 		handleError(delerr, resp)
 		return
 	}
-	resp.WriteHeader(http.StatusAccepted)
+	resp.WriteHeader(http.StatusOK)
 }
 
 func (d DocumentResource) getSubDocument(req *restful.Request, resp *restful.Response) {
@@ -373,14 +375,15 @@ func handleError(err error, resp *restful.Response) {
 		return
 	}
 	log.Printf("[mora] error:%v", err)
-	resp.WriteError(500, err)
+	resp.AddHeader("Content-Type", "text/plain") // consider making ServiceError and write JSON
+	resp.WriteErrorString(500, err.Error())
 }
 
-func requestOK(req *restful.Request, resp *restful.Response) {
+func optionsOK(req *restful.Request, resp *restful.Response) {
 	resp.WriteHeader(http.StatusOK)
 }
 
-func enableCORS(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func enableCORSFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	if origin := req.Request.Header.Get("Origin"); origin != "" {
 		resp.AddHeader("Access-Control-Allow-Origin", origin)
 	} else {
