@@ -28,8 +28,7 @@ In the configuration file: (e.g. mora.properties)
 	# optional
 	mongod.{alias}.username=
 	mongod.{alias}.password=
-	mongod.{alias}.database=
-
+	mongod.{alias}.database=	
 
 returns a JSON document with the names of all databases	
 			
@@ -65,13 +64,36 @@ returns selected fields of a JSON document. Currently, the fields parameter must
 a comma separated list of known fields. The document returned will always contains the internal _id.
 
 
-### Install
+### Install from source
 						
 	go get -u github.com/emicklei/mora
 	
-### Build
+### Create a release
 	
-	go build 
+	sh release.sh 
+
+### Configuration
+
+Mora uses a simple properties file to specify host,port,aliases and other options
+
+	# listener info is required
+	http.server.host=localhost
+	http.server.port=8181
+	
+	# enable cross site requests
+	http.server.cors=true
+
+	# for swagger support (optional)
+	swagger.path=/apidocs/
+	swagger.file.path=./swagger-ui/dist
+
+	# mongo instances are listed here; specify an alias for each
+	mongod.{alias}.host=localhost
+	mongod.{alias}.port=27017
+	# optional authentication
+	mongod.{alias}.username=
+	mongod.{alias}.password=
+	mongod.{alias}.database=		
 
 ### Run
 
