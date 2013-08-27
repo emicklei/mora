@@ -130,7 +130,7 @@ func (d DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restfu
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	names, err := session.DatabaseNames()
 	if err != nil {
@@ -147,7 +147,7 @@ func (d DocumentResource) getAllCollectionNames(req *restful.Request, resp *rest
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	dbname := req.PathParameter("database")
 	names, err := session.DB(dbname).CollectionNames()
@@ -165,7 +165,7 @@ func (d DocumentResource) getDocuments(req *restful.Request, resp *restful.Respo
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	query, err := d.composeQuery(col, req)
@@ -243,7 +243,7 @@ func (d DocumentResource) getDocument(req *restful.Request, resp *restful.Respon
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), bson.M{}, resp)
 }
@@ -255,20 +255,18 @@ func (d DocumentResource) deleteDocument(req *restful.Request, resp *restful.Res
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()	
 	}
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
-
-	var delerr error
 	if bson.IsObjectIdHex(id) {
-		delerr = col.RemoveId(bson.ObjectIdHex(id))
+		err = col.RemoveId(bson.ObjectIdHex(id))
 	} else {
-		delerr = col.Remove(bson.M{"_id": id})
+		err = col.Remove(bson.M{"_id": id})
 	}
 
-	if delerr != nil {
-		handleError(delerr, resp)
+	if err != nil {
+		handleError(err, resp)
 		return
 	}
 	resp.WriteHeader(http.StatusAccepted)
@@ -281,7 +279,7 @@ func (d DocumentResource) getSubDocument(req *restful.Request, resp *restful.Res
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	fields := req.PathParameter("fields")
 	selector := bson.M{}
@@ -313,13 +311,13 @@ func (d DocumentResource) putDocument(req *restful.Request, resp *restful.Respon
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
-	doc := bson.M{"_id": req.PathParameter("_id")}
+	id := req.PathParameter("_id")
+	doc := bson.M{"_id": id}
 	req.ReadEntity(&doc)
-	err = col.Insert(doc)
-	if err != nil {
+	if _, err = col.UpsertId(id, doc); err != nil {
 		handleError(err, resp)
 		return
 	}
@@ -333,7 +331,7 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
@@ -341,8 +339,8 @@ func (d DocumentResource) postDocument(req *restful.Request, resp *restful.Respo
 	if doc["_id"] == nil || !bson.IsObjectIdHex(doc["_id"].(string)) {
 		doc["_id"] = bson.NewObjectId()
 	}
-	err = col.Insert(doc)
-	if err != nil {
+
+	if err = col.Insert(doc); err != nil {
 		handleError(err, resp)
 		return
 	}
