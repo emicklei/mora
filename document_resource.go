@@ -260,9 +260,9 @@ func (d DocumentResource) deleteDocument(req *restful.Request, resp *restful.Res
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
 
-	err = col.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
+	err = col.RemoveId(bson.ObjectIdHex(id))
 	if err != nil && err.Error() == "not found" {
-		err = col.Remove(bson.M{"_id": id}) // sometimes it happens that id is not ObjectId
+		err = col.RemoveId(id) // sometimes it happens that id is not ObjectIdHex
 	}
 
 	if err != nil {
