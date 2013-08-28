@@ -261,7 +261,7 @@ func (d DocumentResource) deleteDocument(req *restful.Request, resp *restful.Res
 	id := req.PathParameter("_id")
 
 	err = col.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
-	if err != nil && err.String() == "not found" {
+	if err != nil && err.Error() == "not found" {
 		err = col.Remove(bson.M{"_id": id}) // sometimes it happens that id is not ObjectId
 	}
 
