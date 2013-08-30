@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	props properties.Properties
+	props          properties.Properties
 	propertiesFile = flag.String("config", "mora.properties", "the configuration file")
 )
 
@@ -25,7 +25,8 @@ func main() {
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
-	DocumentResource{}.Register()
+	DocumentResource{}.RegisterTo(restful.DefaultContainer)
+	StatisticsResource{}.RegisterTo(restful.DefaultContainer)
 	defer func() {
 		closeSessions()
 	}()
