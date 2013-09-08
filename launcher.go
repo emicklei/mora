@@ -21,15 +21,17 @@ func main() {
 	if props, err = properties.Load(*propertiesFile); err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
 	}
-	initConfiguration(props)
-
+	
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
-	DocumentResource{}.Register()
-	defer func() {
-		closeSessions()
-	}()
+	
+	sessMng := NewSessionManager(props)
+	
+	res := &DocumentResource{sessMng}
+	res.Register()
 
+	defer sessMng.CloseAll()
+	
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
 
 	config := swagger.Config{
@@ -40,7 +42,7 @@ func main() {
 		SwaggerFilePath: props["swagger.file.path"],
 	}
 	swagger.InstallSwaggerService(config)
-
+	
 	if props["swagger.path"] != "/" {
 		http.HandleFunc("/", index)
 	}
