@@ -12,9 +12,11 @@ var corsRoutes = []string{
 	"/{alias}/{database}",
 }
 
-type DocumentResource struct{}
+type DocumentResource struct {
+	sessMng *SessionManager
+}
 
-func (d DocumentResource) RegisterTo(container *restful.Container) {
+func (d DocumentResource) AddTo(container *restful.Container) {
 	ws := new(restful.WebService)
 	ws.Path("/docs")
 	ws.Consumes("*/*")

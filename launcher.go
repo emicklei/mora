@@ -21,15 +21,13 @@ func main() {
 	if props, err = properties.Load(*propertiesFile); err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
 	}
-	initConfiguration(props)
+	sessMng := NewSessionManager(props)
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
-	DocumentResource{}.RegisterTo(restful.DefaultContainer)
-	StatisticsResource{}.RegisterTo(restful.DefaultContainer)
-	defer func() {
-		closeSessions()
-	}()
+	DocumentResource{sessMng}.AddTo(restful.DefaultContainer)
+	StatisticsResource{sessMng}.AddTo(restful.DefaultContainer)
+	defer sessMng.CloseAll()
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
 

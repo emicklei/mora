@@ -4,9 +4,11 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-type StatisticsResource struct{}
+type StatisticsResource struct {
+	sessMng *SessionManager
+}
 
-func (s StatisticsResource) RegisterTo(container *restful.Container) {
+func (s StatisticsResource) AddTo(container *restful.Container) {
 	ws := new(restful.WebService)
 	ws.Path("/stats")
 	ws.Consumes("*/*")

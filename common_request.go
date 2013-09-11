@@ -2,23 +2,10 @@ package main
 
 import (
 	"github.com/emicklei/go-restful"
-	"labix.org/v2/mgo"
+
 	"log"
 	"net/http"
 )
-
-func getMongoSession(req *restful.Request) (*mgo.Session, bool, error) {
-	alias := req.PathParameter("alias")
-	config, err := configuration(alias)
-	if err != nil {
-		return nil, false, err
-	}
-	session, needsClose, err := openSession(config)
-	if err != nil {
-		return nil, false, err
-	}
-	return session, needsClose, nil
-}
 
 func handleError(err error, resp *restful.Response) {
 	if err.Error() == "not found" {

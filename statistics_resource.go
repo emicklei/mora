@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-func (s StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *restful.Response) {
+func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *restful.Response) {
 	log.Print("getDatabaseStatistics")
-	session, needsClose, err := getMongoSession(req)
+	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return

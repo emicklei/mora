@@ -1,12 +1,12 @@
 # ![](Letter-M-icon.png) Mora - MongoDB Rest API
 
-#### generic REST server in Go for accessing MongoDB documents and meta data
+#### Generic REST server for accessing MongoDB documents and meta data
 	
 ##### Example		
 	
 	http://localhost:8181/docs/localhost/landskape/connections/51caec2e95c51cb63a584fde	
 
-returns the document from
+Returns the document from
 
  - alias=localhost, mongodb hosted on localhost (aliases are defined in properties file)
  - database=landskape
@@ -17,7 +17,7 @@ returns the document from
 			
 	GET /docs
 
-returns a JSON document with known aliases
+Returns a JSON document with known aliases
 	
 	GET /docs/{alias}
 	
@@ -30,19 +30,19 @@ In the configuration file: (e.g. mora.properties)
 	mongod.{alias}.password=
 	mongod.{alias}.database=	
 
-returns a JSON document with the names of all databases	
+Returns a JSON document with the names of all databases	
 			
 	GET /docs/{alias}/{database}
 	
-returns a JSON document with the names of all collections in a database	
+Returns a JSON document with the names of all collections in a database	
 	
 	GET /docs/{alias}/{database}/{collection}/{_id}
 
-returns a JSON document from a collection using its _id							
+Returns a JSON document from a collection using its _id							
 
 	GET /docs/{alias}/{database}/{collection}
 	
-returns a JSON document with the first (default 10) documents in a collection.
+Returns a JSON document with the first (default 10) documents in a collection.
 This method also accepts query paramters
 
  - query, use mongo shell syntax, e.g. {"size":42}
@@ -56,11 +56,11 @@ Query paramters are optional. Default values are used if left out.
 	PUT /docs/{alias}/{database}/{collection}/{_id}
 	(todo) POST /docs/{alias}/{database}/{collection}
 	
-stores a JSON document in a colllection	
+Stores a JSON document in a colllection	
 
 	GET /{alias}/{database}/{collection}/{_id}/{fields}
 
-returns selected fields of a JSON document. Currently, the fields parameter must be
+Returns selected fields of a JSON document. Currently, the fields parameter must be
 a comma separated list of known fields. The document returned will always contains the internal _id.
 
 
