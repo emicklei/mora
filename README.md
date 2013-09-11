@@ -64,6 +64,10 @@ Returns selected fields of a JSON document. Currently, the fields parameter must
 a comma separated list of known fields. The document returned will always contains the internal _id.
 
 
+	GET /{alias}/{database}
+	
+Returns statistics for the database	
+
 ### Install from source
 						
 	go get -u github.com/emicklei/mora

@@ -3,18 +3,17 @@ package main
 import (
 	"github.com/emicklei/go-restful"
 	"labix.org/v2/mgo/bson"
-	"log"
 )
 
+// GET http://localhost:8181/stats/local/landskape
 func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *restful.Response) {
-	log.Print("getDatabaseStatistics")
 	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	dbname := req.PathParameter("database")
 	result := bson.M{}
@@ -23,6 +22,5 @@ func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *r
 		handleError(err, resp)
 		return
 	}
-	log.Printf("%#v", result)
 	resp.WriteEntity(result)
 }

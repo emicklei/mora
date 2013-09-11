@@ -28,7 +28,7 @@ func (d *DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restf
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	names, err := session.DatabaseNames()
 	if err != nil {
@@ -45,7 +45,7 @@ func (d *DocumentResource) getAllCollectionNames(req *restful.Request, resp *res
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	dbname := req.PathParameter("database")
 	names, err := session.DB(dbname).CollectionNames()
@@ -63,7 +63,7 @@ func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Resp
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	query, err := d.composeQuery(col, req)
@@ -141,7 +141,7 @@ func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Respo
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), bson.M{}, resp)
 }
@@ -153,7 +153,7 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
@@ -164,6 +164,12 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 	} else {
 		delerr = col.Remove(bson.M{"_id": id})
 	}
+
+	// TODO crackcomm
+	//err = col.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
+	//if err != nil && err.String() == "not found" {
+	//	err = col.Remove(bson.M{"_id": id}) // sometimes it happens that id is not ObjectId
+	//}
 
 	if delerr != nil {
 		handleError(delerr, resp)
@@ -179,7 +185,7 @@ func (d *DocumentResource) getSubDocument(req *restful.Request, resp *restful.Re
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	fields := req.PathParameter("fields")
 	selector := bson.M{}
@@ -204,6 +210,7 @@ func (d *DocumentResource) fetchDocument(col *mgo.Collection, id string, selecto
 }
 
 // TODO check for conflict
+// A document must have no _id set or one that matches the path parameter
 func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
@@ -211,19 +218,27 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
-	doc := bson.M{"_id": req.PathParameter("_id")}
+	doc := bson.M{}
 	req.ReadEntity(&doc)
-	err = col.Insert(doc)
+	// Apply internal _id
+	newId := req.PathParameter("_id")
+	if bson.IsObjectIdHex(newId) {
+		doc["_id"] = bson.ObjectIdHex(newId)
+	} else {
+		doc["_id"] = newId
+	}
+	_, err = col.Upsert(bson.M{"_id": newId}, doc)
 	if err != nil {
 		handleError(err, resp)
 		return
 	}
-	resp.WriteHeader(http.StatusCreated)
+	d.handleCreated(req, resp, newId)
 }
 
+// A document cannot have an _id set. Use PUT in that case
 func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
@@ -231,16 +246,27 @@ func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Resp
 		return
 	}
 	if needsClose {
-		defer func() { session.Close() }()
+		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
-	err = col.Insert(doc)
-	if err != nil {
+	if doc["_id"] != nil {
+		resp.WriteErrorString(http.StatusBadRequest, "Document cannot have _id ; use PUT instead to create one")
+		return
+	}
+	newObjectId := bson.NewObjectId()
+	doc["_id"] = newObjectId
+	if err = col.Insert(doc); err != nil {
 		handleError(err, resp)
 		return
 	}
+	d.handleCreated(req, resp, newObjectId.Hex())
+}
+
+func (d *DocumentResource) handleCreated(req *restful.Request, resp *restful.Response, id string) {
+	location := req.Request.URL.RequestURI() + "/" + id
+	resp.AddHeader("Content-Location", location)
 	resp.WriteHeader(http.StatusCreated)
 }
 

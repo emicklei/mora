@@ -21,16 +21,21 @@ func main() {
 	if props, err = properties.Load(*propertiesFile); err != nil {
 		log.Fatalf("[mora] Unable to read properties:%v\n", err)
 	}
+	// shared session manager
 	sessMng := NewSessionManager(props)
+	defer sessMng.CloseAll()
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
+	restful.DefaultContainer.Router(restful.CurlyRouter{})
+
+	// services
 	DocumentResource{sessMng}.AddTo(restful.DefaultContainer)
 	StatisticsResource{sessMng}.AddTo(restful.DefaultContainer)
-	defer sessMng.CloseAll()
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
 
+	// Swagger UI
 	config := swagger.Config{
 		WebServices:     restful.RegisteredWebServices(),
 		WebServicesUrl:  basePath,
