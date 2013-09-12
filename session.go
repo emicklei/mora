@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/emicklei/goproperties"
 	"labix.org/v2/mgo"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type SessionManager struct {
@@ -46,13 +48,22 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 		return existing.Clone(), true, nil
 	}
 	s.accessLock.Lock()
-	info("connecting to [%s=%s]", config["alias"], hostport)
+	timeout := 0
+	timeoutConfig := strings.Trim(config["timeout"], " ")
+	if len(timeoutConfig) != 0 {
+		timeout, err = strconv.Atoi(timeoutConfig)
+		if err != nil {
+			return nil, false, err
+		}
+	}
+	info("connecting to [%s=%s] with timeout [%d seconds]", config["alias"], hostport, timeout)
 	dialInfo := mgo.DialInfo{
 		Addrs:    []string{hostport},
 		Direct:   true,
 		Database: config["database"],
 		Username: config["username"],
 		Password: config["password"],
+		Timeout:  time.Duration(timeout) * time.Second,
 	}
 	newSession, err := mgo.DialWithInfo(&dialInfo)
 	if err != nil {

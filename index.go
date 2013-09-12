@@ -3,7 +3,7 @@ package main
 import "net/http"
 
 func index(w http.ResponseWriter, r *http.Request) {
-	if props["swagger.path"] != "" {
+	if len(props["swagger.path"]) > 0 {
 		http.Redirect(w, r, props["swagger.path"], http.StatusMovedPermanently)
 	}
 }

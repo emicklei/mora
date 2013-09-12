@@ -94,6 +94,8 @@ Mora uses a simple properties file to specify host,port,aliases and other option
 	# mongo instances are listed here; specify an alias for each
 	mongod.{alias}.host=localhost
 	mongod.{alias}.port=27017
+	# initial and operational timeout in seconds
+	mongod.{alias}.timeout=5
 	# optional authentication
 	mongod.{alias}.username=
 	mongod.{alias}.password=
