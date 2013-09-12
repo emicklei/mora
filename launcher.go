@@ -27,7 +27,7 @@ func main() {
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
-	restful.DefaultContainer.Router(restful.CurlyRouter{})
+	//restful.DefaultContainer.Router(restful.CurlyRouter{})
 
 	// services
 	DocumentResource{sessMng}.AddTo(restful.DefaultContainer)
