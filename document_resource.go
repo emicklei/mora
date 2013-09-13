@@ -158,21 +158,14 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
 
-	var delerr error
 	if bson.IsObjectIdHex(id) {
-		delerr = col.RemoveId(bson.ObjectIdHex(id))
+		err = col.RemoveId(bson.ObjectIdHex(id))
 	} else {
-		delerr = col.Remove(bson.M{"_id": id})
+		err = col.Remove(bson.M{"_id": id})
 	}
-
-	// TODO crackcomm
-	//err = col.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
-	//if err != nil && err.String() == "not found" {
-	//	err = col.Remove(bson.M{"_id": id}) // sometimes it happens that id is not ObjectId
-	//}
-
-	if delerr != nil {
-		handleError(delerr, resp)
+	
+	if err != nil {
+		handleError(err, resp)
 		return
 	}
 	resp.WriteHeader(http.StatusOK)
@@ -197,14 +190,15 @@ func (d *DocumentResource) getSubDocument(req *restful.Request, resp *restful.Re
 
 func (d *DocumentResource) fetchDocument(col *mgo.Collection, id string, selector bson.M, resp *restful.Response) {
 	doc := bson.M{}
-	var finderr error
+	var sel *mgo.Query
 	if bson.IsObjectIdHex(id) {
-		finderr = col.FindId(bson.ObjectIdHex(id)).Select(selector).One(&doc)
+		sel = col.FindId(bson.ObjectIdHex(id))
 	} else {
-		finderr = col.Find(bson.M{"_id": id}).Select(selector).One(&doc)
+		sel = col.Find(bson.M{"_id": id})
 	}
-	if finderr != nil {
-		handleError(finderr, resp)
+	if err := sel.Select(selector).One(&doc); err != nil {
+		handleError(err, resp)
+		return
 	}
 	resp.WriteEntity(doc)
 }
@@ -230,7 +224,7 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 	} else {
 		doc["_id"] = newId
 	}
-	_, err = col.Upsert(bson.M{"_id": newId}, doc)
+	_, err = col.Upsert(bson.M{"_id": doc["_id"]}, doc)
 	if err != nil {
 		handleError(err, resp)
 		return
