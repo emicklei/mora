@@ -197,14 +197,15 @@ func (d *DocumentResource) getSubDocument(req *restful.Request, resp *restful.Re
 
 func (d *DocumentResource) fetchDocument(col *mgo.Collection, id string, selector bson.M, resp *restful.Response) {
 	doc := bson.M{}
-	var finderr error
+	var sel *mgo.Query
 	if bson.IsObjectIdHex(id) {
-		finderr = col.FindId(bson.ObjectIdHex(id)).Select(selector).One(&doc)
+		sel = col.FindId(bson.ObjectIdHex(id))
 	} else {
-		finderr = col.Find(bson.M{"_id": id}).Select(selector).One(&doc)
+		sel = col.Find(bson.M{"_id": id})
 	}
-	if finderr != nil {
-		handleError(finderr, resp)
+	if err := sel.Select(selector).One(&doc); err != nil {
+		handleError(err, resp)
+		return
 	}
 	resp.WriteEntity(doc)
 }
