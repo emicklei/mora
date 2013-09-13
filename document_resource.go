@@ -231,7 +231,7 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 	} else {
 		doc["_id"] = newId
 	}
-	_, err = col.Upsert(bson.M{"_id": newId}, doc)
+	_, err = col.Upsert(bson.M{"_id": doc["_id"]}, doc)
 	if err != nil {
 		handleError(err, resp)
 		return
