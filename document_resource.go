@@ -5,7 +5,6 @@ import (
 	"github.com/emicklei/go-restful"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,31 +79,50 @@ func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Resp
 	resp.WriteEntity(result)
 }
 
+func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.Response) {
+	exp, err := getQuery(req)
+	if err != nil {
+		handleError(err, resp)
+		return
+	}
+	if len(exp) == 0 {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// get session
+	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	if err != nil {
+		handleError(err, resp)
+		return
+	}
+	if needsClose {
+		defer session.Close()
+	}
+	col := d.getMongoCollection(req, session)
+	// remove documents
+	err = col.Remove(exp)
+	if err != nil {
+		handleError(err, resp)
+		return
+	}
+	resp.WriteHeader(http.StatusOK)
+}
+
 //Param(ws.QueryParameter("query", "query in json format")).
 //Param(ws.QueryParameter("fields", "comma separated list of field names")).
 //Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
 //Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 //Param(ws.QueryParameter("sort", "comma separated list of field names")).
 func (d *DocumentResource) composeQuery(col *mgo.Collection, req *restful.Request) (*mgo.Query, error) {
-	expression := bson.M{}
-	qp := req.QueryParameter("query")
-	if len(qp) > 0 {
-		log.Println("query=" + qp)
-		if err := json.Unmarshal([]byte(qp), &expression); err != nil {
-			return nil, err
-		}
-		log.Printf("expression=%v\n", expression)
+	expression, err := getQuery(req)
+	if err != nil {
+		return nil, err
 	}
 	query := col.Find(expression)
 
-	selection := bson.M{}
-	fields := req.QueryParameter("fields")
-	if len(fields) > 0 {
-		for _, v := range strings.Split(fields, ",") {
-			selection[v] = 1
-		}
+	if fields := getFields(req); len(fields) > 0 {
+		query.Select(fields)
 	}
-	query.Select(selection)
 
 	skip := req.QueryParameter("skip")
 	if len(skip) > 0 {
@@ -143,7 +161,26 @@ func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Respo
 	if needsClose {
 		defer session.Close()
 	}
-	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), bson.M{}, resp)
+	col := d.getMongoCollection(req, session)
+	doc := bson.M{}
+
+	id := req.PathParameter("_id")
+	if bson.IsObjectIdHex(id) {
+		doc["_id"] = bson.ObjectIdHex(id)
+	} else {
+		doc["_id"] = id
+	}
+	query := col.Find(doc)
+	
+	if fields := getFields(req); len(fields) > 0 {
+		query.Select(fields)
+	}
+
+	if err := query.One(&doc); err != nil {
+		handleError(err, resp)
+		return
+	}
+	resp.WriteEntity(doc)
 }
 
 func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Response) {
@@ -157,50 +194,18 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 	}
 	col := d.getMongoCollection(req, session)
 	id := req.PathParameter("_id")
-
+	exp := bson.M{}
 	if bson.IsObjectIdHex(id) {
-		err = col.RemoveId(bson.ObjectIdHex(id))
+		exp["_id"] = bson.ObjectIdHex(id)
 	} else {
-		err = col.Remove(bson.M{"_id": id})
+		exp["_id"] = id
 	}
-	
-	if err != nil {
+
+	if err := col.Remove(exp); err != nil {
 		handleError(err, resp)
 		return
 	}
 	resp.WriteHeader(http.StatusOK)
-}
-
-func (d *DocumentResource) getSubDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
-	if err != nil {
-		handleError(err, resp)
-		return
-	}
-	if needsClose {
-		defer session.Close()
-	}
-	fields := req.PathParameter("fields")
-	selector := bson.M{}
-	for _, each := range strings.Split(fields, ",") {
-		selector[each] = 1
-	}
-	d.fetchDocument(d.getMongoCollection(req, session), req.PathParameter("_id"), selector, resp)
-}
-
-func (d *DocumentResource) fetchDocument(col *mgo.Collection, id string, selector bson.M, resp *restful.Response) {
-	doc := bson.M{}
-	var sel *mgo.Query
-	if bson.IsObjectIdHex(id) {
-		sel = col.FindId(bson.ObjectIdHex(id))
-	} else {
-		sel = col.Find(bson.M{"_id": id})
-	}
-	if err := sel.Select(selector).One(&doc); err != nil {
-		handleError(err, resp)
-		return
-	}
-	resp.WriteEntity(doc)
 }
 
 // TODO check for conflict
@@ -266,4 +271,25 @@ func (d *DocumentResource) handleCreated(req *restful.Request, resp *restful.Res
 
 func (d *DocumentResource) getMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
 	return session.DB(req.PathParameter("database")).C(req.PathParameter("collection"))
+}
+
+func getFields(req *restful.Request) bson.M {
+	exp := bson.M{}
+	fields := req.QueryParameter("fields")
+	if len(fields) > 0 {
+		for _, v := range strings.Split(fields, ",") {
+			exp[v] = 1
+		}
+	}
+	return exp
+}
+
+func getQuery(req *restful.Request) (exp bson.M, err error) {
+	exp = bson.M{}
+	qp := req.QueryParameter("query")
+	if len(qp) == 0 {
+		return
+	}
+	err = json.Unmarshal([]byte(qp), &exp)
+	return
 }
