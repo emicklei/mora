@@ -21,7 +21,6 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 	ws.Path("/docs")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
-	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 
 	if props.GetBool("http.server.cors", false) {
 		ws.Filter(enableCORSFilter)
@@ -29,7 +28,12 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 			ws.Route(ws.Method("OPTIONS").Path(corsRoutes[i]).To(optionsOK))
 		}
 	}
-
+	
+	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
+	database := ws.PathParameter("database", "Database name from the MongoDB instance")
+	collection := ws.PathParameter("collection", "Collection name from the database")
+	id := ws.PathParameter("_id", "Storage identifier of the document")
+	
 	ws.Route(ws.GET("/").To(d.getAllAliases).
 		Doc("Return all Mongo DB aliases from the configuration").
 		Operation("getAllAliases"))
@@ -39,16 +43,19 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 		Operation("getAllDatabaseNames").
 		Param(alias))
 
-	database := ws.PathParameter("database", "Database name from the MongoDB instance")
-
 	ws.Route(ws.GET("/{alias}/{database}").To(d.getAllCollectionNames).
 		Doc("Return all collections for the database").
 		Operation("getAllCollectionNames").
 		Param(alias).
 		Param(database))
 
-	collection := ws.PathParameter("collection", "Collection name from the database")
-	id := ws.PathParameter("_id", "Storage identifier of the document")
+	ws.Route(ws.DELETE("/{alias}/{database}/{collection}").To(d.deleteDocuments).
+		Doc("Deletes documents from a collection from the database by query selector").
+		Operation("deleteDocuments").
+		Param(alias).
+		Param(database).
+		Param(collection).
+		Param(ws.QueryParameter("query", "query in json format")))
 
 	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}").To(d.getDocument).
 		Doc("Return a document from a collection from the database by its internal _id").
@@ -56,7 +63,8 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 		Param(alias).
 		Param(database).
 		Param(collection).
-		Param(id))
+		Param(id).
+		Param(ws.QueryParameter("fields", "comma separated list of field names")))
 
 	ws.Route(ws.DELETE("/{alias}/{database}/{collection}/{_id}").To(d.deleteDocument).
 		Doc("Deletes a document from a collection from the database by its internal _id").
@@ -94,14 +102,6 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 		Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
 		Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 		Param(ws.QueryParameter("sort", "comma separated list of field names")))
-
-	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}/{fields}").To(d.getSubDocument).
-		Doc("Get a partial document using the internal _id and fields (comma separated field names)").
-		Operation("getSubDocument").
-		Param(alias).
-		Param(database).
-		Param(collection).
-		Param(id))
 
 	container.Add(ws)
 }
