@@ -85,10 +85,6 @@ func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.R
 		handleError(err, resp)
 		return
 	}
-	if len(exp) == 0 {
-		resp.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	// get session
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
@@ -99,6 +95,15 @@ func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.R
 		defer session.Close()
 	}
 	col := d.getMongoCollection(req, session)
+	if len(exp) == 0 {
+		// Remove Entire collection
+		if err = col.DropCollection(); err != nil {
+			handleError(err, resp)
+			return
+		}
+		resp.WriteHeader(http.StatusOK)
+		return
+	}
 	// remove documents
 	err = col.Remove(exp)
 	if err != nil {
