@@ -4,14 +4,6 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-// These are the route path for which CORS is allowed
-// http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-var corsRoutes = []string{
-	"/{alias}/{database}/{collection}/{_id}",
-	"/{alias}/{database}/{collection}",
-	"/{alias}/{database}",
-}
-
 type DocumentResource struct {
 	sessMng *SessionManager
 }
@@ -23,17 +15,15 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 	ws.Produces(restful.MIME_JSON)
 
 	if props.GetBool("http.server.cors", false) {
-		ws.Filter(enableCORSFilter)
-		for i := 0; i < len(corsRoutes); i++ {
-			ws.Route(ws.Method("OPTIONS").Path(corsRoutes[i]).To(optionsOK))
-		}
+		cors := restful.CrossOriginResourceSharing{ExposeHeaders: []string{"Content-Type"}, CookiesAllowed: false, Container: container}
+		ws.Filter(cors.Filter)
 	}
-	
+
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
 	collection := ws.PathParameter("collection", "Collection name from the database")
 	id := ws.PathParameter("_id", "Storage identifier of the document")
-	
+
 	ws.Route(ws.GET("/").To(d.getAllAliases).
 		Doc("Return all Mongo DB aliases from the configuration").
 		Operation("getAllAliases"))

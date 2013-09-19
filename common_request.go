@@ -24,15 +24,3 @@ func handleError(err error, resp *restful.Response) {
 func optionsOK(req *restful.Request, resp *restful.Response) {
 	resp.WriteHeader(http.StatusOK)
 }
-
-func enableCORSFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	if origin := req.Request.Header.Get("Origin"); origin != "" {
-		resp.AddHeader("Access-Control-Allow-Origin", origin)
-	} else {
-		resp.AddHeader("Access-Control-Allow-Origin", "*")
-	}
-
-	resp.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	resp.AddHeader("Access-Control-Allow-Headers", "Content-Type")
-	chain.ProcessFilter(req, resp)
-}
