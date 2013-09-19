@@ -50,7 +50,7 @@ func (d DocumentResource) AddTo(container *restful.Container) {
 		Param(database))
 
 	ws.Route(ws.DELETE("/{alias}/{database}/{collection}").To(d.deleteDocuments).
-		Doc("Deletes documents from a collection from the database by query selector").
+		Doc("Deletes documents from collection if query present, otherwise removes the entire collection.").
 		Operation("deleteDocuments").
 		Param(alias).
 		Param(database).
