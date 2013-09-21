@@ -76,6 +76,12 @@ func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Resp
 		handleError(err, resp)
 		return
 	}
+	if c, _ := strconv.ParseBool(req.QueryParameter("count")); c {
+		query.Limit(0)
+		if n, err := query.Count(); err == nil {
+			resp.AddHeader("X-Object-Count", strconv.Itoa(n))
+		}
+	}
 	resp.WriteEntity(result)
 }
 
