@@ -275,7 +275,7 @@ func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Resp
 }
 
 func (d *DocumentResource) handleCreated(req *restful.Request, resp *restful.Response, id string) {
-	location := req.Request.URL.RequestURI() + "/" + id
+	location := strings.TrimRight(req.Request.URL.RequestURI(), "/") + "/" + id
 	resp.AddHeader("Content-Location", location)
 	resp.WriteHeader(http.StatusCreated)
 }
