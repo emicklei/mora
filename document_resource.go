@@ -233,19 +233,21 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
-	// Apply internal _id
-	newId := req.PathParameter("_id")
-	if bson.IsObjectIdHex(newId) {
-		doc["_id"] = bson.ObjectIdHex(newId)
+	// Create selector with id
+	var id interface{}
+	strId := req.PathParameter("_id")
+	if bson.IsObjectIdHex(strId) {
+		id = bson.ObjectIdHex(strId)
 	} else {
-		doc["_id"] = newId
+		id = strId
 	}
-	_, err = col.Upsert(bson.M{"_id": doc["_id"]}, doc)
+	sel := bson.M{"_id": id} // query selector
+	_, err = col.Upsert(sel, doc)
 	if err != nil {
 		handleError(err, resp)
 		return
 	}
-	d.handleCreated(req, resp, newId)
+	d.handleCreated(req, resp, strId)
 }
 
 // A document cannot have an _id set. Use PUT in that case
