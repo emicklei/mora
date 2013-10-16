@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+type DocumentResource struct {
+	sessMng *SessionManager
+}
+
 func (d *DocumentResource) getAllAliases(req *restful.Request, resp *restful.Response) {
 	resp.WriteAsJson(d.sessMng.GetAliases())
 }
@@ -182,7 +186,7 @@ func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Respo
 		doc["_id"] = id
 	}
 	query := col.Find(doc)
-	
+
 	if fields := getFields(req); len(fields) > 0 {
 		query.Select(fields)
 	}

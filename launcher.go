@@ -27,11 +27,11 @@ func main() {
 
 	restful.EnableContentEncoding = true
 	restful.DefaultResponseMimeType = restful.MIME_JSON
-	//restful.DefaultContainer.Router(restful.CurlyRouter{})
+	restful.DefaultContainer.Router(restful.CurlyRouter{})
 
 	// services
-	DocumentResource{sessMng}.AddTo(restful.DefaultContainer)
-	StatisticsResource{sessMng}.AddTo(restful.DefaultContainer)
+	DocumentResource{sessMng}.AddWebServiceTo(restful.DefaultContainer)
+	StatisticsResource{sessMng}.AddWebServiceTo(restful.DefaultContainer)
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
 
