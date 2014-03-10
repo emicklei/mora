@@ -237,6 +237,10 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 	col := d.getMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
+	// Transform document id string to a ObjectIdHex
+	if docId, ok := doc["_id"].(string); ok && bson.IsObjectIdHex(docId) {
+		doc["_id"] = bson.ObjectIdHex(docId)
+	}
 	// Create selector with id
 	var id interface{}
 	strId := req.PathParameter("_id")
