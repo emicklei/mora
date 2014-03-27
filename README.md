@@ -1,6 +1,8 @@
 # ![](Letter-M-icon.png) Mora - MongoDB Rest API
 
 #### Generic REST server for accessing MongoDB documents and meta data
+
+![Mora UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-08-04.png)
 	
 ##### Example		
 	
@@ -108,6 +110,3 @@ Mora uses a simple properties file to specify host,port,aliases and other option
 &copy; 2013, http://ernestmicklei.com. MIT License
  - Icons from http://www.iconarchive.com, CC Attribution 3.0
  - Swagger from https://github.com/wordnik/swagger-core/wiki, Apache License, Version 2.0 	
-
-## Mora API Web UI
-![Mora UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-08-04.png)
