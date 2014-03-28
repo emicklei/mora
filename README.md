@@ -1,4 +1,4 @@
-# ![](Letter-M-icon.png) Mora - MongoDB Rest API
+# ![](static/Letter-M-icon.png) Mora - MongoDB Rest API
 
 #### Generic REST server for accessing MongoDB documents and meta data
 	
