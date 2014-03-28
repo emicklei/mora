@@ -11,14 +11,19 @@ func RegisterDocumentResource(sessMng *session.SessionManager, container *restfu
 }
 
 func (d DocumentResource) AddWebServiceTo(container *restful.Container, cors bool) {
-	ws := new(restful.WebService)
+	ws := d.GetWebService(cors)
+	container.Add(ws)
+}
+
+func (d DocumentResource) GetWebService(cors bool) (ws *restful.WebService) {
+	ws = new(restful.WebService)
 	ws.Path("/docs")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
 
 	if cors {
-		cors := restful.CrossOriginResourceSharing{ExposeHeaders: []string{"Content-Type"}, CookiesAllowed: false, Container: container}
-		ws.Filter(cors.Filter)
+		corsRule := restful.CrossOriginResourceSharing{ExposeHeaders: []string{"Content-Type"}, CookiesAllowed: false, Container: container}
+		ws.Filter(corsRule.Filter)
 	}
 
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
@@ -97,5 +102,5 @@ func (d DocumentResource) AddWebServiceTo(container *restful.Container, cors boo
 		Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 		Param(ws.QueryParameter("sort", "comma separated list of field names")))
 
-	container.Add(ws)
+	return
 }

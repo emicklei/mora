@@ -11,7 +11,12 @@ func RegisterStatisticsResource(sessMng *session.SessionManager, container *rest
 }
 
 func (s StatisticsResource) AddWebServiceTo(container *restful.Container) {
-	ws := new(restful.WebService)
+	ws := d.GetWebService(cors)
+	container.Add(ws)
+}
+
+func (s StatisticsResource) GetWebService() (ws *restful.WebService) {
+	ws = new(restful.WebService)
 	ws.Path("/stats")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
@@ -33,5 +38,5 @@ func (s StatisticsResource) AddWebServiceTo(container *restful.Container) {
 		Param(database).
 		Param(collection))
 
-	container.Add(ws)
+	return
 }
