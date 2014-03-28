@@ -35,7 +35,7 @@ func main() {
 	MoraIcon = filepath.Join(SwaggerPath, "images/mora.ico")
 
 	// New, shared session manager
-	sessMng := session.NewSessionManager(props)
+	sessMng := session.NewSessionManager(props.SelectProperties("mongod.*"))
 	defer sessMng.CloseAll()
 
 	// Enable content encoding

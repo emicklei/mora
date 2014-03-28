@@ -112,8 +112,7 @@ func (s *SessionManager) CloseAll() {
 
 // Set's session manager configuration.
 func (s *SessionManager) SetConfig(props properties.Properties) {
-	aliases := props.SelectProperties("mongod.*")
-	for k, v := range aliases {
+	for k, v := range props {
 		parts := strings.Split(k, ".")
 		alias := parts[1]
 		config := s.configMap[alias]
