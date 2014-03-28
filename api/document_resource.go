@@ -237,7 +237,10 @@ func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Respo
 	}
 	col := d.GetMongoCollection(req, session)
 	doc := bson.M{}
-	req.ReadEntity(&doc)
+	if err := req.ReadEntity(&doc); err != nil {
+		resp.WriteErrorString(http.StatusBadRequest, "Cannot read entity from request")
+		return
+	}
 	// Transform document id string to a ObjectIdHex
 	if docId, ok := doc["_id"].(string); ok && bson.IsObjectIdHex(docId) {
 		doc["_id"] = bson.ObjectIdHex(docId)
@@ -271,7 +274,10 @@ func (d *DocumentResource) PostDocument(req *restful.Request, resp *restful.Resp
 	}
 	col := d.GetMongoCollection(req, session)
 	doc := bson.M{}
-	req.ReadEntity(&doc)
+	if err := req.ReadEntity(&doc); err != nil {
+		resp.WriteErrorString(http.StatusBadRequest, "Cannot read entity from request")
+		return
+	}
 	if doc["_id"] != nil {
 		resp.WriteErrorString(http.StatusBadRequest, "Document cannot have _id ; use PUT instead to create one")
 		return
