@@ -15,11 +15,11 @@ type DocumentResource struct {
 	sessMng *session.SessionManager
 }
 
-func (d *DocumentResource) getAllAliases(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) GetAllAliases(req *restful.Request, resp *restful.Response) {
 	resp.WriteAsJson(d.sessMng.GetAliases())
 }
 
-func (d *DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restful.Response) {
 	// filter invalids
 	hostport := req.PathParameter("alias")
 	if hostport == "" || strings.Index(hostport, ".") != -1 {
@@ -42,7 +42,7 @@ func (d *DocumentResource) getAllDatabaseNames(req *restful.Request, resp *restf
 	resp.WriteEntity(names)
 }
 
-func (d *DocumentResource) getAllCollectionNames(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -60,7 +60,7 @@ func (d *DocumentResource) getAllCollectionNames(req *restful.Request, resp *res
 	resp.WriteEntity(names)
 }
 
-func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) GetDocuments(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -69,8 +69,8 @@ func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Resp
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
-	query, err := d.composeQuery(col, req)
+	col := d.GetMongoCollection(req, session)
+	query, err := d.ComposeQuery(col, req)
 	if err != nil {
 		resp.WriteError(400, err) // TODO handleError(err, resp)
 		return
@@ -90,7 +90,7 @@ func (d *DocumentResource) getDocuments(req *restful.Request, resp *restful.Resp
 	resp.WriteEntity(result)
 }
 
-func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) DeleteDocuments(req *restful.Request, resp *restful.Response) {
 	exp, err := getQuery(req)
 	if err != nil {
 		handleError(err, resp)
@@ -105,7 +105,7 @@ func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.R
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
+	col := d.GetMongoCollection(req, session)
 	if len(exp) == 0 {
 		// Remove Entire collection
 		if err = col.DropCollection(); err != nil {
@@ -129,7 +129,7 @@ func (d *DocumentResource) deleteDocuments(req *restful.Request, resp *restful.R
 //Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
 //Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 //Param(ws.QueryParameter("sort", "comma separated list of field names")).
-func (d *DocumentResource) composeQuery(col *mgo.Collection, req *restful.Request) (*mgo.Query, error) {
+func (d *DocumentResource) ComposeQuery(col *mgo.Collection, req *restful.Request) (*mgo.Query, error) {
 	expression, err := getQuery(req)
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func (d *DocumentResource) composeQuery(col *mgo.Collection, req *restful.Reques
 	return query, nil
 }
 
-func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) GetDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -177,7 +177,7 @@ func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Respo
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
+	col := d.GetMongoCollection(req, session)
 	doc := bson.M{}
 
 	id := req.PathParameter("_id")
@@ -199,7 +199,7 @@ func (d *DocumentResource) getDocument(req *restful.Request, resp *restful.Respo
 	resp.WriteEntity(doc)
 }
 
-func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) DeleteDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -208,7 +208,7 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
+	col := d.GetMongoCollection(req, session)
 	id := req.PathParameter("_id")
 	exp := bson.M{}
 	if bson.IsObjectIdHex(id) {
@@ -226,7 +226,7 @@ func (d *DocumentResource) deleteDocument(req *restful.Request, resp *restful.Re
 
 // TODO check for conflict
 // A document must have no _id set or one that matches the path parameter
-func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -235,7 +235,7 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
+	col := d.GetMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
 	// Transform document id string to a ObjectIdHex
@@ -256,11 +256,11 @@ func (d *DocumentResource) putDocument(req *restful.Request, resp *restful.Respo
 		handleError(err, resp)
 		return
 	}
-	d.handleCreated(req, resp, strId)
+	d.HandleCreated(req, resp, strId)
 }
 
 // A document cannot have an _id set. Use PUT in that case
-func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Response) {
+func (d *DocumentResource) PostDocument(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -269,7 +269,7 @@ func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Resp
 	if needsClose {
 		defer session.Close()
 	}
-	col := d.getMongoCollection(req, session)
+	col := d.GetMongoCollection(req, session)
 	doc := bson.M{}
 	req.ReadEntity(&doc)
 	if doc["_id"] != nil {
@@ -282,10 +282,10 @@ func (d *DocumentResource) postDocument(req *restful.Request, resp *restful.Resp
 		handleError(err, resp)
 		return
 	}
-	d.handleCreated(req, resp, newObjectId.Hex())
+	d.HandleCreated(req, resp, newObjectId.Hex())
 }
 
-func (d *DocumentResource) handleCreated(req *restful.Request, resp *restful.Response, id string) {
+func (d *DocumentResource) HandleCreated(req *restful.Request, resp *restful.Response, id string) {
 	location := strings.TrimRight(req.Request.URL.RequestURI(), "/")
 	if noid := strings.TrimRight(location, id); noid == location {
 		location = noid + "/" + id
@@ -294,7 +294,7 @@ func (d *DocumentResource) handleCreated(req *restful.Request, resp *restful.Res
 	resp.WriteHeader(http.StatusCreated)
 }
 
-func (d *DocumentResource) getMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
+func (d *DocumentResource) GetMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
 	return session.DB(req.PathParameter("database")).C(req.PathParameter("collection"))
 }
 

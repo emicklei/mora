@@ -20,15 +20,15 @@ func (s StatisticsResource) AddWebServiceTo(container *restful.Container) {
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
 	collection := ws.PathParameter("collection", "Collection name from the database")
 
-	ws.Route(ws.GET("/{alias}/{database}").To(s.getDatabaseStatistics).
+	ws.Route(ws.GET("/{alias}/{database}").To(s.GetDatabaseStatistics).
 		Doc("Return statistics for the database").
-		Operation("getDatabaseStatistics").
+		Operation("GetDatabaseStatistics").
 		Param(alias).
 		Param(database))
 
-	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(s.getCollectionStatistics).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(s.GetCollectionStatistics).
 		Doc("Return statistics for the collection of a database").
-		Operation("getCollectionStatistics").
+		Operation("GetCollectionStatistics").
 		Param(alias).
 		Param(database).
 		Param(collection))

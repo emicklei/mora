@@ -12,7 +12,7 @@ type StatisticsResource struct {
 }
 
 // GET http://localhost:8181/stats/local/landskape
-func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *restful.Response) {
+func (s *StatisticsResource) GetDatabaseStatistics(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
@@ -33,7 +33,7 @@ func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *r
 }
 
 // GET http://localhost:8181/stats/local/landskape/systems
-func (s *StatisticsResource) getCollectionStatistics(req *restful.Request, resp *restful.Response) {
+func (s *StatisticsResource) GetCollectionStatistics(req *restful.Request, resp *restful.Response) {
 	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)

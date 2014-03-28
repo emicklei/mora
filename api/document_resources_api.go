@@ -26,66 +26,66 @@ func (d DocumentResource) AddWebServiceTo(container *restful.Container, cors boo
 	collection := ws.PathParameter("collection", "Collection name from the database")
 	id := ws.PathParameter("_id", "Storage identifier of the document")
 
-	ws.Route(ws.GET("/").To(d.getAllAliases).
+	ws.Route(ws.GET("/").To(d.GetAllAliases).
 		Doc("Return all Mongo DB aliases from the configuration").
-		Operation("getAllAliases"))
+		Operation("GetAllAliases"))
 
-	ws.Route(ws.GET("/{alias}").To(d.getAllDatabaseNames).
+	ws.Route(ws.GET("/{alias}").To(d.GetAllDatabaseNames).
 		Doc("Return all database names").
-		Operation("getAllDatabaseNames").
+		Operation("GetAllDatabaseNames").
 		Param(alias))
 
-	ws.Route(ws.GET("/{alias}/{database}").To(d.getAllCollectionNames).
+	ws.Route(ws.GET("/{alias}/{database}").To(d.GetAllCollectionNames).
 		Doc("Return all collections for the database").
-		Operation("getAllCollectionNames").
+		Operation("GetAllCollectionNames").
 		Param(alias).
 		Param(database))
 
-	ws.Route(ws.DELETE("/{alias}/{database}/{collection}").To(d.deleteDocuments).
+	ws.Route(ws.DELETE("/{alias}/{database}/{collection}").To(d.DeleteDocuments).
 		Doc("Deletes documents from collection if query present, otherwise removes the entire collection.").
-		Operation("deleteDocuments").
+		Operation("DeleteDocuments").
 		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(ws.QueryParameter("query", "query in json format")))
 
-	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}").To(d.getDocument).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}/{_id}").To(d.GetDocument).
 		Doc("Return a document from a collection from the database by its internal _id").
-		Operation("getDocument").
+		Operation("GetDocument").
 		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id).
 		Param(ws.QueryParameter("fields", "comma separated list of field names")))
 
-	ws.Route(ws.DELETE("/{alias}/{database}/{collection}/{_id}").To(d.deleteDocument).
+	ws.Route(ws.DELETE("/{alias}/{database}/{collection}/{_id}").To(d.DeleteDocument).
 		Doc("Deletes a document from a collection from the database by its internal _id").
-		Operation("deleteDocument").
+		Operation("DeleteDocument").
 		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id))
 
-	ws.Route(ws.PUT("/{alias}/{database}/{collection}/{_id}").To(d.putDocument).
+	ws.Route(ws.PUT("/{alias}/{database}/{collection}/{_id}").To(d.PutDocument).
 		Doc("Store a document to a collection from the database using its internal _id").
-		Operation("putDocument").
+		Operation("PutDocument").
 		Param(alias).
 		Param(database).
 		Param(collection).
 		Param(id).
 		Reads(""))
 
-	ws.Route(ws.POST("/{alias}/{database}/{collection}").To(d.postDocument).
+	ws.Route(ws.POST("/{alias}/{database}/{collection}").To(d.PostDocument).
 		Doc("Store a document to a collection from the database").
-		Operation("postDocument").
+		Operation("PostDocument").
 		Param(alias).
 		Param(database).
 		Param(collection).
 		Reads(""))
 
-	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(d.getDocuments).
+	ws.Route(ws.GET("/{alias}/{database}/{collection}").To(d.GetDocuments).
 		Doc("Return documents (max 10 by default) from a collection from the database.").
-		Operation("getDocuments").
+		Operation("GetDocuments").
 		Param(alias).
 		Param(database).
 		Param(collection).
