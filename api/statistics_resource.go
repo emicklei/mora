@@ -1,13 +1,14 @@
-package main
+package api
 
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/mora/session"
 	"labix.org/v2/mgo/bson"
 )
 
 type StatisticsResource struct {
-	sessMng *SessionManager
+	sessMng *session.SessionManager
 }
 
 // GET http://localhost:8181/stats/local/landskape

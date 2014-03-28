@@ -1,16 +1,22 @@
-package main
+package api
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/mora/session"
 )
 
-func (d DocumentResource) AddWebServiceTo(container *restful.Container) {
+func RegisterDocumentResource(sessMng *session.SessionManager, container *restful.Container, cors bool) {
+	dc := DocumentResource{sessMng}
+	dc.AddWebServiceTo(container, cors)
+}
+
+func (d DocumentResource) AddWebServiceTo(container *restful.Container, cors bool) {
 	ws := new(restful.WebService)
 	ws.Path("/docs")
 	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
 
-	if props.GetBool("http.server.cors", false) {
+	if cors {
 		cors := restful.CrossOriginResourceSharing{ExposeHeaders: []string{"Content-Type"}, CookiesAllowed: false, Container: container}
 		ws.Filter(cors.Filter)
 	}

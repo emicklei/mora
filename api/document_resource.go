@@ -1,8 +1,9 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/mora/session"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 )
 
 type DocumentResource struct {
-	sessMng *SessionManager
+	sessMng *session.SessionManager
 }
 
 func (d *DocumentResource) getAllAliases(req *restful.Request, resp *restful.Response) {

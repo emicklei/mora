@@ -1,5 +1,7 @@
 #!/bin/sh
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # fetch or update all dependent Go packages
 export GOPATH=`pwd`/target
 go get -v -u github.com/emicklei/goproperties
@@ -20,9 +22,9 @@ fi
 #cp -r ./swagger-ui/dist ./target/swagger-ui/dist
 
 # apply customizations to Swagger UI
-cp patches/index.html ./target/swagger-ui/dist
-cp patches/logo_small.png ./target/swagger-ui/dist/images
-cp patches/mora.ico ./target/swagger-ui/dist/images
+cp $DIR/patches/index.html ./target/swagger-ui/dist
+cp $DIR/patches/logo_small.png ./target/swagger-ui/dist/images
+cp $DIR/patches/mora.ico ./target/swagger-ui/dist/images
 sed "s/89bf04/89bfAA/" ./target/swagger-ui/dist/css/screen.css > ./target/swagger-ui/dist/css/screen-mora.css
 
 ARCHIVE="mora-"`date +"%Y%m%d"`".zip"

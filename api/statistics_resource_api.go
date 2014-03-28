@@ -1,8 +1,14 @@
-package main
+package api
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/mora/session"
 )
+
+func RegisterStatisticsResource(sessMng *session.SessionManager, container *restful.Container) {
+	dc := StatisticsResource{sessMng}
+	dc.AddWebServiceTo(container)
+}
 
 func (s StatisticsResource) AddWebServiceTo(container *restful.Container) {
 	ws := new(restful.WebService)
