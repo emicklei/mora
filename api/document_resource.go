@@ -12,11 +12,11 @@ import (
 )
 
 type DocumentResource struct {
-	sessMng *session.SessionManager
+	SessMng *session.SessionManager
 }
 
 func (d *DocumentResource) GetAllAliases(req *restful.Request, resp *restful.Response) {
-	resp.WriteAsJson(d.sessMng.GetAliases())
+	resp.WriteAsJson(d.SessMng.GetAliases())
 }
 
 func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restful.Response) {
@@ -26,7 +26,7 @@ func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restf
 		resp.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -43,7 +43,7 @@ func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restf
 }
 
 func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -61,7 +61,7 @@ func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *res
 }
 
 func (d *DocumentResource) GetDocuments(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -97,7 +97,7 @@ func (d *DocumentResource) DeleteDocuments(req *restful.Request, resp *restful.R
 		return
 	}
 	// get session
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -169,7 +169,7 @@ func (d *DocumentResource) ComposeQuery(col *mgo.Collection, req *restful.Reques
 }
 
 func (d *DocumentResource) GetDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -200,7 +200,7 @@ func (d *DocumentResource) GetDocument(req *restful.Request, resp *restful.Respo
 }
 
 func (d *DocumentResource) DeleteDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -227,7 +227,7 @@ func (d *DocumentResource) DeleteDocument(req *restful.Request, resp *restful.Re
 // TODO check for conflict
 // A document must have no _id set or one that matches the path parameter
 func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -261,7 +261,7 @@ func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Respo
 
 // A document cannot have an _id set. Use PUT in that case
 func (d *DocumentResource) PostDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.sessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
