@@ -11,7 +11,7 @@ func RegisterStatisticsResource(sessMng *session.SessionManager, container *rest
 }
 
 func (s StatisticsResource) AddWebServiceTo(container *restful.Container) {
-	ws := d.GetWebService(cors)
+	ws := s.GetWebService()
 	container.Add(ws)
 }
 

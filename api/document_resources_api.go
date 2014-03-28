@@ -11,20 +11,21 @@ func RegisterDocumentResource(sessMng *session.SessionManager, container *restfu
 }
 
 func (d DocumentResource) AddWebServiceTo(container *restful.Container, cors bool) {
-	ws := d.GetWebService(cors)
-	container.Add(ws)
-}
-
-func (d DocumentResource) GetWebService(cors bool) (ws *restful.WebService) {
-	ws = new(restful.WebService)
-	ws.Path("/docs")
-	ws.Consumes("*/*")
-	ws.Produces(restful.MIME_JSON)
+	ws := d.GetWebService()
 
 	if cors {
 		corsRule := restful.CrossOriginResourceSharing{ExposeHeaders: []string{"Content-Type"}, CookiesAllowed: false, Container: container}
 		ws.Filter(corsRule.Filter)
 	}
+
+	container.Add(ws)
+}
+
+func (d DocumentResource) GetWebService() (ws *restful.WebService) {
+	ws = new(restful.WebService)
+	ws.Path("/docs")
+	ws.Consumes("*/*")
+	ws.Produces(restful.MIME_JSON)
 
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")
 	database := ws.PathParameter("database", "Database name from the MongoDB instance")
