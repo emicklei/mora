@@ -1,18 +1,19 @@
-package main
+package api
 
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/emicklei/mora/session"
 	"labix.org/v2/mgo/bson"
 )
 
 type StatisticsResource struct {
-	sessMng *SessionManager
+	SessMng *session.SessionManager
 }
 
 // GET http://localhost:8181/stats/local/landskape
-func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
+func (s *StatisticsResource) GetDatabaseStatistics(req *restful.Request, resp *restful.Response) {
+	session, needsClose, err := s.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -32,8 +33,8 @@ func (s *StatisticsResource) getDatabaseStatistics(req *restful.Request, resp *r
 }
 
 // GET http://localhost:8181/stats/local/landskape/systems
-func (s *StatisticsResource) getCollectionStatistics(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := s.sessMng.Get(req.PathParameter("alias"))
+func (s *StatisticsResource) GetCollectionStatistics(req *restful.Request, resp *restful.Response) {
+	session, needsClose, err := s.SessMng.Get(req.PathParameter("alias"))
 	if err != nil {
 		handleError(err, resp)
 		return
