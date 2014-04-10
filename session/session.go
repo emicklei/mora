@@ -33,7 +33,7 @@ func NewSessionManager(props properties.Properties) *SessionManager {
 // Returns slice containing all configured aliases
 func (s *SessionManager) GetAliases() []string {
 	aliases := []string{}
-	for k, _ := range s.configMap {
+	for k := range s.configMap {
 		aliases = append(aliases, k)
 	}
 	return aliases

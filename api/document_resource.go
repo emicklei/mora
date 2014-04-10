@@ -21,12 +21,12 @@ func (d *DocumentResource) GetAllAliases(req *restful.Request, resp *restful.Res
 
 func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restful.Response) {
 	// filter invalids
-	hostport := req.PathParameter("alias")
+	hostport := getParam("alias", req)
 	if hostport == "" || strings.Index(hostport, ".") != -1 {
 		resp.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -43,7 +43,7 @@ func (d *DocumentResource) GetAllDatabaseNames(req *restful.Request, resp *restf
 }
 
 func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -51,7 +51,7 @@ func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *res
 	if needsClose {
 		defer session.Close()
 	}
-	dbname := req.PathParameter("database")
+	dbname := getParam("database", req)
 	names, err := session.DB(dbname).CollectionNames()
 	if err != nil {
 		handleError(err, resp)
@@ -61,7 +61,7 @@ func (d *DocumentResource) GetAllCollectionNames(req *restful.Request, resp *res
 }
 
 func (d *DocumentResource) GetDocuments(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -97,7 +97,7 @@ func (d *DocumentResource) DeleteDocuments(req *restful.Request, resp *restful.R
 		return
 	}
 	// get session
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -169,7 +169,7 @@ func (d *DocumentResource) ComposeQuery(col *mgo.Collection, req *restful.Reques
 }
 
 func (d *DocumentResource) GetDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -200,7 +200,7 @@ func (d *DocumentResource) GetDocument(req *restful.Request, resp *restful.Respo
 }
 
 func (d *DocumentResource) DeleteDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -227,7 +227,7 @@ func (d *DocumentResource) DeleteDocument(req *restful.Request, resp *restful.Re
 // TODO check for conflict
 // A document must have no _id set or one that matches the path parameter
 func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -264,7 +264,7 @@ func (d *DocumentResource) PutDocument(req *restful.Request, resp *restful.Respo
 
 // A document cannot have an _id set. Use PUT in that case
 func (d *DocumentResource) PostDocument(req *restful.Request, resp *restful.Response) {
-	session, needsClose, err := d.SessMng.Get(req.PathParameter("alias"))
+	session, needsClose, err := d.SessMng.Get(getParam("alias", req))
 	if err != nil {
 		handleError(err, resp)
 		return
@@ -301,7 +301,7 @@ func (d *DocumentResource) HandleCreated(req *restful.Request, resp *restful.Res
 }
 
 func (d *DocumentResource) GetMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
-	return session.DB(req.PathParameter("database")).C(req.PathParameter("collection"))
+	return session.DB(getParam("database", req)).C(req.PathParameter("collection"))
 }
 
 func getFields(req *restful.Request) bson.M {
@@ -323,4 +323,15 @@ func getQuery(req *restful.Request) (exp bson.M, err error) {
 	}
 	err = json.Unmarshal([]byte(qp), &exp)
 	return
+}
+
+func getParam(name string, req *restful.Request) string {
+	if param := req.PathParameter(name); param != "" {
+		return param
+	}
+	if attr := req.Attribute(name); attr != nil {
+		param, _ := attr.(string)
+		return param
+	}
+	return ""
 }
