@@ -1,74 +1,246 @@
-# ![](static/Letter-M-icon.png) Mora - MongoDB Rest API
+# ![](static/Letter-M-icon.png) Mora - Mongo Rest API
 
-#### Generic REST server for accessing MongoDB documents and meta data
-
-![Mora UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-08-04.png)
+#### REST server for accessing MongoDB documents and meta data
 	
-##### Example		
-	
-	http://localhost:8181/docs/localhost/landskape/connections/51caec2e95c51cb63a584fde	
+##### Documents
 
-Returns the document from
+When querying on collections those parameters are available:
 
- - alias=localhost, mongodb hosted on localhost (aliases are defined in properties file)
- - database=landskape
- - collection=connections
- - _id=51caec2e95c51cb63a584fde
+	query  - use mongo shell syntax, e.g. {"size":42}
+	limit  - maximum number of documents in the result
+	skip   - offset in the result set
+	fields - comma separated list of (path-dotted) field names
+	sort   - comma separated list of (path-dotted) field names
 
-#### API	
-			
-	GET /docs
+##### Examples
 
-Returns a JSON document with known aliases
-	
-	GET /docs/{alias}
-	
-In the configuration file: (e.g. mora.properties)
-	
-	mongod.{alias}.host=localhost
-	mongod.{alias}.port=27017
-	# optional
-	mongod.{alias}.username=
-	mongod.{alias}.password=
-	mongod.{alias}.database=	
-
-Returns a JSON document with the names of all databases	
-			
-	GET /docs/{alias}/{database}
-	
-Returns a JSON document with the names of all collections in a database	
-	
-	GET /docs/{alias}/{database}/{collection}/{_id}
-
-Returns a JSON document from a collection using its _id							
-
-	GET /docs/{alias}/{database}/{collection}
-	
-Returns a JSON document with the first (default 10) documents in a collection.
-This method also accepts query paramters
-
- - query, use mongo shell syntax, e.g. {"size":42}
- - limit , maximum number of documents in the result
- - skip, offset in the result set
- - fields, comma separated list of (path-dotted) field names
- - sort, comma separated list of (path-dotted) field names
-
-Query paramters are optional. Default values are used if left out.
-
-	PUT /docs/{alias}/{database}/{collection}/{_id}
-	(todo) POST /docs/{alias}/{database}/{collection}
-	
-Stores a JSON document in a colllection	
-
-	GET /{alias}/{database}/{collection}/{_id}/{fields}
-
-Returns selected fields of a JSON document. Currently, the fields parameter must be
-a comma separated list of known fields. The document returned will always contains the internal _id.
+###### Listing aliases
 
 
-	GET /{alias}/{database}
-	
-Returns statistics for the database	
+	$ curl 'http://127.0.0.1:8181/docs/' \
+	>   -D - \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:06:30 GMT
+	Content-Length: 61
+
+	{
+	  "success": true,
+	  "data": [
+	   "test",
+	   "local"
+	  ]
+	}
+
+###### Listing databases
+
+	$ curl 'http://127.0.0.1:8181/docs/local/' \
+	>   -D - \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:07:11 GMT
+	Content-Length: 61
+
+	{
+	  "success": true,
+	  "data": [
+	   "local",
+	   "use1"
+	  ]
+	}
+
+###### Listing collections
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local' \
+	>   -D - \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:24:10 GMT
+	Content-Length: 98
+
+	{
+	  "success": true,
+	  "data": [
+	   "new-collection",
+	   "startup_log",
+	   "system.indexes"
+	  ]
+	}
+
+###### Inserting document
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection/document-id' \
+	>   -D - \
+	>   -X POST \
+	>   -H 'Content-Type: application/json' \
+	>   -H 'Accept: application/json' \
+	>   --data '{"title": "Some title", "content": "document content"}'
+	HTTP/1.1 201 Created
+	Content-Location: /docs/local/local/new-collection/document-id
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:23:33 GMT
+	Content-Length: 116
+
+	{
+	  "success": true,
+	  "data": {
+	   "created": true,
+	   "url": "/docs/local/local/new-collection/document-id"
+	  }
+	}
+
+###### Finding document
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection/document-id' \
+	>   -D - \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:32:33 GMT
+	Content-Length: 123
+
+	{
+	  "success": true,
+	  "data": {
+	   "_id": "document-id",
+	   "content": "document content",
+	   "title": "Some title"
+	  }
+	}
+
+###### Finding documents
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection?query={"title": "Some title"}' \
+	>   -D - \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:39:04 GMT
+	Content-Length: 136
+
+	{
+	  "success": true,
+	  "data": [
+	   {
+	    "_id": "document-id",
+	    "content": "document content",
+	    "title": "Some title"
+	   }
+	  ]
+	}
+
+
+###### Updating document
+
+
+	$ curl 'http://127.0.0.1:8181/docs/local/database/new-collection/document-id' \
+	>  -D - \
+	>  -X PUT \
+	>  -H 'Content-Type: application/json' \
+	>  -H 'Accept: application/json' \
+	>  --data '{"title": "New title"}'
+	HTTP/1.1 200 OK
+	Content-Location: /docs/local/database/new-collection/document-id
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 06:37:02 GMT
+	Content-Length: 133
+
+	{
+	  "success": true,
+	  "data": {
+	   "created": false,
+	   "url": "/docs/local/database/new-collection/document-id"
+	  }
+	}
+
+###### Removing document
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection/document-id'  \
+	>   -D - \
+	>   -X DELETE \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:42:47 GMT
+	Content-Length: 22
+
+	{
+	  "success": true
+	}
+
+###### Removing collection
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection'  \
+	>   -D - \
+	>   -X DELETE \
+	>   -H 'Accept: application/json'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:43:24 GMT
+	Content-Length: 22
+
+	{
+	  "success": true
+	}
+
+##### Statistics
+
+###### Database statistics
+
+	$ curl http://127.0.0.1:8181/stats/local/local -D -
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:51:18 GMT
+	Content-Length: 301
+
+	{
+	  "avgObjSize": 580.8888888888889,
+	  "collections": 3,
+	  "dataFileVersion": {
+	   "major": 4,
+	   "minor": 5
+	  },
+	  "dataSize": 5228,
+	  "db": "local",
+	  "fileSize": 67108864,
+	  "indexSize": 0,
+	  "indexes": 0,
+	  "nsSizeMB": 16,
+	  "numExtents": 3,
+	  "objects": 9,
+	  "ok": 1,
+	  "storageSize": 10502144
+    }
+
+###### Collection statistics
+
+	$ curl http://127.0.0.1:8181/stats/local/local/startup_log -D -
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Tue, 22 Apr 2014 07:52:31 GMT
+	Content-Length: 338
+
+	{
+	  "avgObjSize": 728,
+	  "capped": true,
+	  "count": 7,
+	  "indexSizes": {},
+	  "lastExtentSize": 10485760,
+	  "max": 9223372036854775807,
+	  "nindexes": 0,
+	  "ns": "local.startup_log",
+	  "numExtents": 1,
+	  "ok": 1,
+	  "paddingFactor": 1,
+	  "size": 5096,
+	  "storageSize": 10485760,
+	  "systemFlags": 0,
+	  "totalIndexSize": 0,
+	  "userFlags": 0
+	}
 
 ### Install from source
 						
@@ -76,7 +248,7 @@ Returns statistics for the database
 	
 ### Create a release
 	
-	sh release.sh 
+	sh release.sh
 
 ### Configuration
 
@@ -101,11 +273,22 @@ Mora uses a simple properties file to specify host,port,aliases and other option
 	# optional authentication
 	mongod.{alias}.username=
 	mongod.{alias}.password=
-	mongod.{alias}.database=		
+	mongod.{alias}.database=
+
+	# enable /stats/ endpoint
+	mora.statistics.enable=true
+
 
 ### Run
 
-	./mora -config mora.properties
+	$ mora -config mora.properties
+
+### Swagger
+
+Swagger UI is displaying automatically generated API documentation and playground.
+
+![Swagger UI](https://s3.amazonaws.com/public.philemonworks.com/mora/mora-2013-08-04.png)
+
 	
 &copy; 2013, http://ernestmicklei.com. MIT License
  - Icons from http://www.iconarchive.com, CC Attribution 3.0
