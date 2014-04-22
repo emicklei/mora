@@ -5,6 +5,12 @@ import (
 	"github.com/emicklei/mora/session"
 )
 
+// Creates and returns documents webservice
+func WebServiceDefaults(alias, database string, sessMng *session.SessionManager) *restful.WebService {
+	dc := Resource{sessMng}
+	return dc.WebServiceDefaults(alias, database)
+}
+
 // Creates and adds documents resource to container with default alias and database
 func RegisterDefaults(alias, database string, sessMng *session.SessionManager, container *restful.Container, cors bool) {
 	dc := Resource{sessMng}
