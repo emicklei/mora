@@ -161,6 +161,11 @@ func (d *Resource) handleUpdate(col *mgo.Collection, one bool, selector, documen
 		info *mgo.ChangeInfo
 	)
 
+	// Trasform id to ObjectId if needed
+	if id, _ := document[ParamID].(string); id != "" && bson.IsObjectIdHex(id) {
+		document[ParamID] = bson.ObjectIdHex(id)
+	}
+
 	// Update document by id
 	if one {
 		info, err = col.UpsertId(selector[ParamID], document)
