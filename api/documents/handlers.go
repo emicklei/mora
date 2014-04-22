@@ -257,7 +257,6 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 		return
 	}
 
-	var result interface{}
 	// If _id parameter is included in path
 	// 	queries only one document.
 	// Get documents from database
@@ -269,28 +268,49 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 			WriteError(err, resp)
 			return
 		}
-		result = document
-	} else {
-		// Get all documents
-		documents := []bson.M{}
-		err = query.All(&documents)
-		if err != nil {
-			WriteError(err, resp)
-			return
-		}
-		result = documents
+		WriteResponse(document, resp)
+		return
+	}
+
+	// Get all documents
+	documents := []bson.M{}
+	err = query.All(&documents)
+	if err != nil {
+		WriteError(err, resp)
+		return
+	}
+
+	res := struct {
+		Success bool        `json:"success"`
+		Count   interface{} `json:"count,omitempty"`
+		Prev    string      `json:"prev_url,omitempty"`
+		Next    string      `json:"next_url,omitempty"`
+		Data    interface{} `json:"data"`
+	}{Success: true, Data: documents}
+
+	// Get limit amount
+	limitnum := 10
+	if limit := req.QueryParameter("limit"); len(limit) > 0 {
+		limitnum, _ = strconv.Atoi(limit)
+	}
+
+	// If got full limit set next link
+	if len(documents) == limitnum {
+		res.Prev, res.Next = d.prevnexturl(req)
 	}
 
 	// Count documents if count parameter is included in query
 	if c, _ := strconv.ParseBool(req.QueryParameter("count")); c {
+		query.Skip(0)
 		query.Limit(0)
 		if n, err := query.Count(); err == nil {
+			res.Count = n
 			resp.AddHeader("X-Object-Count", strconv.Itoa(n))
 		}
 	}
 
 	// Write result back to client
-	WriteResponse(result, resp)
+	resp.WriteEntity(res)
 }
 
 //
@@ -378,28 +398,10 @@ func (d *Resource) ComposeQuery(col *mgo.Collection, req *restful.Request) (quer
 	}
 
 	// Number of documents to skip in result set
-	skip := req.QueryParameter("skip")
-	if len(skip) > 0 {
-		skipnum, err := strconv.Atoi(skip)
-		if err != nil {
-			return nil, false, err
-		}
-		query.Skip(skipnum)
-	} else {
-		query.Skip(0)
-	}
+	query.Skip(queryIntParam(req, "skip", 0))
 
 	// Maximum number of documents in the result set
-	limit := req.QueryParameter("limit")
-	if len(limit) > 0 {
-		limitnum, err := strconv.Atoi(limit)
-		if err != nil {
-			return nil, false, err
-		}
-		query.Limit(limitnum)
-	} else {
-		query.Limit(10)
-	}
+	query.Limit(queryIntParam(req, "limit", 10))
 
 	// Compose sort from comma separated list in request query
 	sort := req.QueryParameter("sort")
@@ -431,6 +433,40 @@ func (d *Resource) documentLocation(req *restful.Request, id string) (location s
 
 	// Add id of the document
 	return location + "/" + id
+}
+
+func (d *Resource) prevnexturl(req *restful.Request) (prev string, next string) {
+	return d.collectionurl(false, req), d.collectionurl(true, req)
+}
+
+func (d *Resource) collectionurl(next bool, req *restful.Request) (string) {
+	// Get current location url
+	uri, _ := url.Parse(req.Request.URL.RequestURI())
+	q := uri.Query()
+
+	// Skip/limit values
+	limitnum := queryIntParam(req, "limit", 10)
+	skipnum := queryIntParam(req, "skip", 0)
+
+	// Number of documents to skip
+	if next {
+		q.Set("skip", strconv.Itoa(skipnum + limitnum))
+	} else {
+		// prev
+		prevskip := skipnum - limitnum
+		if prevskip < 0 {
+			prevskip = 0
+		}
+		if prevskip == skipnum {
+			return ""
+		}
+		q.Set("skip", strconv.Itoa(prevskip))
+	}
+
+	// URL query
+	uri.RawQuery = q.Encode()
+
+	return uri.String()
 }
 
 func (d *Resource) GetMongoCollection(req *restful.Request, session *mgo.Session) *mgo.Collection {
@@ -502,4 +538,12 @@ func getParam(name string, req *restful.Request) (param string) {
 		param, _ = attr.(string)
 	}
 	return
+}
+
+func queryIntParam(req *restful.Request, name string, def int) int {
+	num := def
+	if strnum := req.QueryParameter(name); len(strnum) > 0 {
+		num, _ = strconv.Atoi(strnum)
+	}
+	return num
 }
