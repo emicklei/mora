@@ -43,7 +43,7 @@ func (s *Resource) DatabaseStatisticsHandler(req *restful.Request, resp *restful
 	fmt.Printf("stats result:%#v", result)
 
 	// Write result back to client
-	resp.WriteEntity(result)
+	WriteResponse(result, resp)
 }
 
 // GET http://localhost:8181/stats/local/landskape/systems
@@ -77,5 +77,5 @@ func (s *Resource) CollectionStatisticsHandler(req *restful.Request, resp *restf
 	fmt.Printf("stats result:%#v", result)
 
 	// Write result back to client
-	resp.WriteEntity(result)
+	WriteResponse(result, resp)
 }

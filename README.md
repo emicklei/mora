@@ -193,53 +193,59 @@ When querying on collections those parameters are available:
 	$ curl http://127.0.0.1:8181/stats/local/local -D -
 	HTTP/1.1 200 OK
 	Content-Type: application/json
-	Date: Tue, 22 Apr 2014 07:51:18 GMT
-	Content-Length: 301
+	Date: Tue, 22 Apr 2014 08:17:46 GMT
+	Content-Length: 341
 
 	{
-	  "avgObjSize": 580.8888888888889,
-	  "collections": 3,
-	  "dataFileVersion": {
-	   "major": 4,
-	   "minor": 5
-	  },
-	  "dataSize": 5228,
-	  "db": "local",
-	  "fileSize": 67108864,
-	  "indexSize": 0,
-	  "indexes": 0,
-	  "nsSizeMB": 16,
-	  "numExtents": 3,
-	  "objects": 9,
-	  "ok": 1,
-	  "storageSize": 10502144
-    }
+	  "success": true,
+	  "data": {
+	   "avgObjSize": 595.6,
+	   "collections": 3,
+	   "dataFileVersion": {
+	    "major": 4,
+	    "minor": 5
+	   },
+	   "dataSize": 5956,
+	   "db": "local",
+	   "fileSize": 67108864,
+	   "indexSize": 0,
+	   "indexes": 0,
+	   "nsSizeMB": 16,
+	   "numExtents": 3,
+	   "objects": 10,
+	   "ok": 1,
+	   "storageSize": 10502144
+	  }
+	}
 
 ###### Collection statistics
 
 	$ curl http://127.0.0.1:8181/stats/local/local/startup_log -D -
 	HTTP/1.1 200 OK
 	Content-Type: application/json
-	Date: Tue, 22 Apr 2014 07:52:31 GMT
-	Content-Length: 338
+	Date: Tue, 22 Apr 2014 08:18:16 GMT
+	Content-Length: 389
 
 	{
-	  "avgObjSize": 728,
-	  "capped": true,
-	  "count": 7,
-	  "indexSizes": {},
-	  "lastExtentSize": 10485760,
-	  "max": 9223372036854775807,
-	  "nindexes": 0,
-	  "ns": "local.startup_log",
-	  "numExtents": 1,
-	  "ok": 1,
-	  "paddingFactor": 1,
-	  "size": 5096,
-	  "storageSize": 10485760,
-	  "systemFlags": 0,
-	  "totalIndexSize": 0,
-	  "userFlags": 0
+	  "success": true,
+	  "data": {
+	   "avgObjSize": 728,
+	   "capped": true,
+	   "count": 8,
+	   "indexSizes": {},
+	   "lastExtentSize": 10485760,
+	   "max": 9223372036854775807,
+	   "nindexes": 0,
+	   "ns": "local.startup_log",
+	   "numExtents": 1,
+	   "ok": 1,
+	   "paddingFactor": 1,
+	   "size": 5824,
+	   "storageSize": 10485760,
+	   "systemFlags": 0,
+	   "totalIndexSize": 0,
+	   "userFlags": 0
+	  }
 	}
 
 ### Install from source
