@@ -113,25 +113,26 @@ When querying on collections those parameters are available:
 
 ###### Finding documents
 
-	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection?query={"title": "Some title"}' \
-	>   -D - \
-	>   -H 'Accept: application/json'
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection?limit=1&skip=1' \
+	>    -D - \
+	>    -H 'Accept: application/json'
 	HTTP/1.1 200 OK
 	Content-Type: application/json
-	Date: Tue, 22 Apr 2014 07:39:04 GMT
-	Content-Length: 136
+	Date: Wed, 23 Apr 2014 23:18:39 GMT
+	Content-Length: 387
 
 	{
 	  "success": true,
+	  "prev_url": "/docs/local/local/new-collection?limit=1\u0026skip=0",
+	  "next_url": "/docs/local/local/new-collection?limit=1\u0026skip=2",
 	  "data": [
 	   {
-	    "_id": "document-id",
+	    "_id": "535849cfb734f91cdc000002",
 	    "content": "document content",
 	    "title": "Some title"
 	   }
 	  ]
 	}
-
 
 ###### Updating document
 
