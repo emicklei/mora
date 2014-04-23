@@ -1,4 +1,4 @@
-package errhandler
+package response
 
 import (
 	"github.com/emicklei/go-restful"
