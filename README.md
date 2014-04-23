@@ -157,6 +157,23 @@ When querying on collections those parameters are available:
 	  }
 	}
 
+###### Updating documents
+
+	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection' \
+	>   -D - \
+	>   -X PUT \
+	>   -H 'Content-Type: application/json' \
+	>   -H 'Accept: application/json' \
+	>   --data '{"$set": {"title": "New title"}}'
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+	Date: Wed, 23 Apr 2014 23:33:11 GMT
+	Content-Length: 22
+
+	{
+	  "success": true
+	}
+
 ###### Removing document
 
 	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection/document-id'  \

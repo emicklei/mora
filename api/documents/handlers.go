@@ -126,7 +126,7 @@ func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.R
 	}
 
 	// Insert if request method is POST or no selector otherwise update
-	if req.Request.Method == "POST" || len(selector) == 0 {
+	if req.Request.Method == "POST" {
 		d.handleInsert(col, selector, document, req, resp)
 		return
 	}
