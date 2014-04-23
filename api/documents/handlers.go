@@ -444,7 +444,7 @@ func (d *Resource) prevnexturl(req *restful.Request) (prev string, next string) 
 	return d.collectionurl(false, req), d.collectionurl(true, req)
 }
 
-func (d *Resource) collectionurl(next bool, req *restful.Request) (string) {
+func (d *Resource) collectionurl(next bool, req *restful.Request) string {
 	// Get current location url
 	uri, _ := url.Parse(req.Request.URL.RequestURI())
 	q := uri.Query()
@@ -455,7 +455,7 @@ func (d *Resource) collectionurl(next bool, req *restful.Request) (string) {
 
 	// Number of documents to skip
 	if next {
-		q.Set("skip", strconv.Itoa(skipnum + limitnum))
+		q.Set("skip", strconv.Itoa(skipnum+limitnum))
 	} else {
 		// prev
 		prevskip := skipnum - limitnum
