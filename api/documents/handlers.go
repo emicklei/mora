@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"errors"
 )
 
 type Resource struct {
@@ -43,7 +44,7 @@ func (d *Resource) AliasDatabasesHandler(req *restful.Request, resp *restful.Res
 	// Mongo session
 	session, needclose, err := d.SessMng.Get(alias)
 	if err != nil {
-		WriteError(err, resp)
+		WriteStatusError(http.StatusNotFound, err, resp)
 		return
 	}
 	if needclose {
@@ -82,6 +83,12 @@ func (d *Resource) DatabaseCollectionsHandler(req *restful.Request, resp *restfu
 	collections, err := session.DB(dbname).CollectionNames()
 	if err != nil {
 		WriteError(err, resp)
+		return
+	}
+
+	if collections == nil {
+		err = errors.New("Unknown database: " + dbname)
+		WriteStatusError(http.StatusNotFound, err, resp)
 		return
 	}
 
