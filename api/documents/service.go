@@ -36,8 +36,7 @@ func (d Resource) Register(container *restful.Container, cors bool) {
 func (d Resource) WebService() *restful.WebService {
 	ws := new(restful.WebService)
 	ws.Path("/docs")
-	ws.Consumes("application/json")
-	// ws.Consumes("*/*")
+	ws.Consumes("*/*")
 	ws.Produces(restful.MIME_JSON)
 
 	alias := ws.PathParameter("alias", "Name of the MongoDB instance as specified in the configuration")

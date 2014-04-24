@@ -16,10 +16,13 @@ func WriteError(err error, resp *restful.Response) {
 
 	// Set response status code
 	code := http.StatusInternalServerError
-	switch err.Error() {
-	case "not found":
+
+	// String error
+	error := err.Error()
+
+	if error == "not found" || len(error) > 7 && error[:7] == "Unknown" {
 		code = http.StatusNotFound
-	case "unauthorized":
+	} else if error == "unauthorized" {
 		code = http.StatusUnauthorized
 	}
 

@@ -2,6 +2,7 @@ package documents
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/emicklei/go-restful"
 	. "github.com/emicklei/mora/api/response"
 	"github.com/emicklei/mora/session"
@@ -12,7 +13,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"errors"
 )
 
 type Resource struct {
@@ -44,7 +44,7 @@ func (d *Resource) AliasDatabasesHandler(req *restful.Request, resp *restful.Res
 	// Mongo session
 	session, needclose, err := d.SessMng.Get(alias)
 	if err != nil {
-		WriteStatusError(http.StatusNotFound, err, resp)
+		WriteError(err, resp)
 		return
 	}
 	if needclose {
@@ -88,7 +88,7 @@ func (d *Resource) DatabaseCollectionsHandler(req *restful.Request, resp *restfu
 
 	if collections == nil {
 		err = errors.New("Unknown database: " + dbname)
-		WriteStatusError(http.StatusNotFound, err, resp)
+		WriteError(err, resp)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.R
 	// Read a document from request
 	document := bson.M{}
 	if err := req.ReadEntity(&document); err != nil {
-		WriteError(err, resp)
+		WriteStatusError(http.StatusBadRequest, err, resp)
 		return
 	}
 
