@@ -22,7 +22,7 @@ func WriteError(err error, resp *restful.Response) {
 
 	if error == "not found" || len(error) > 7 && error[:7] == "Unknown" {
 		code = http.StatusNotFound
-	} else if error == "unauthorized" {
+	} else if error == "unauthorized" || len(error) > 14 && error[:14] == "not authorized" {
 		code = http.StatusUnauthorized
 	}
 
