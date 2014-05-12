@@ -130,7 +130,7 @@ func (s *SessionManager) GetConfig(alias string) (properties.Properties, error) 
 	if config := s.configMap[alias]; config != nil {
 		return config, nil
 	}
-	return nil, errors.New("Unknown alias:" + alias)
+	return nil, errors.New("Unknown alias: " + alias)
 }
 
 // Log wrapper

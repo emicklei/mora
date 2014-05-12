@@ -5,7 +5,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
 	"github.com/emicklei/goproperties"
-	"github.com/emicklei/mora/api"
+	"github.com/emicklei/mora/api/documents"
+	"github.com/emicklei/mora/api/statistics"
 	"github.com/emicklei/mora/session"
 	"log"
 	"net/http"
@@ -27,7 +28,7 @@ func main() {
 	info("loading configuration from [%s]", *propertiesFile)
 	var err error
 	if props, err = properties.Load(*propertiesFile); err != nil {
-		log.Fatalf("[mora] Unable to read properties:%v\n", err)
+		log.Fatalf("[mora][error] Unable to read properties:%v\n", err)
 	}
 
 	// Swagger configuration
@@ -49,10 +50,12 @@ func main() {
 	apiCors := props.GetBool("http.server.cors", false)
 
 	// Documents API
-	api.RegisterDocumentResource(sessMng, restful.DefaultContainer, apiCors)
+	documents.Register(sessMng, restful.DefaultContainer, apiCors)
 
 	// Statistics API
-	api.RegisterStatisticsResource(sessMng, restful.DefaultContainer)
+	if ok := props.GetBool("mora.statistics.enable", false); ok {
+		statistics.Register(sessMng, restful.DefaultContainer)
+	}
 
 	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
 
@@ -74,7 +77,7 @@ func main() {
 	http.HandleFunc("/favion.ico", icon)
 
 	info("ready to serve on %s", basePath)
-	log.Fatal(http.ListenAndServe(":"+props["http.server.port"], nil))
+	log.Fatal(http.ListenAndServe(props["http.server.host"]+":"+props["http.server.port"], nil))
 }
 
 // If swagger is not on `/` redirect to it
@@ -88,5 +91,5 @@ func icon(w http.ResponseWriter, r *http.Request) {
 
 // Log wrapper
 func info(template string, values ...interface{}) {
-	log.Printf("[mora] "+template+"\n", values...)
+	log.Printf("[mora][info] "+template+"\n", values...)
 }
