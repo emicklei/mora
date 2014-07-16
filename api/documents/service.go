@@ -149,8 +149,7 @@ func (d Resource) WebService() *restful.WebService {
 		Param(alias).
 		Param(database).
 		Param(collection).
-		Param(ws.QueryParameter("count", "counts documents in collection and returns result in X-Object-Count header"+
-		"(value should be `true` to activate)")).
+		Param(ws.QueryParameter("count", "counts documents in collection and returns result in X-Object-Count header").DataType("boolean")).
 		Param(ws.QueryParameter("query", "query in json format")).
 		Param(ws.QueryParameter("fields", "comma separated list of field names")).
 		Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).

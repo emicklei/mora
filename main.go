@@ -2,15 +2,16 @@ package main
 
 import (
 	"flag"
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
-	"github.com/emicklei/goproperties"
-	"github.com/emicklei/mora/api/documents"
-	"github.com/emicklei/mora/api/statistics"
-	"github.com/emicklei/mora/session"
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/swagger"
+	properties "github.com/emicklei/goproperties"
+	"github.com/emicklei/mora/api/documents"
+	"github.com/emicklei/mora/api/statistics"
+	"github.com/emicklei/mora/session"
 )
 
 var (
@@ -39,12 +40,15 @@ func main() {
 	sessMng := session.NewSessionManager(props.SelectProperties("mongod.*"))
 	defer sessMng.CloseAll()
 
-	// Enable content encoding
-	restful.EnableContentEncoding = true
-
-	// Default Response serialize method (JSON)
-	restful.DefaultResponseMimeType = restful.MIME_JSON
-	restful.DefaultContainer.Router(new(restful.CurlyRouter))
+	// accept and respond in JSON unless told otherwise
+	restful.DefaultRequestContentType(restful.MIME_JSON)
+	restful.DefaultResponseContentType(restful.MIME_JSON)
+	// gzip if accepted
+	restful.DefaultContainer.EnableContentEncoding(true)
+	// faster router
+	restful.DefaultContainer.Router(restful.CurlyRouter{})
+	// no need to access body more than once
+	restful.SetCacheReadEntity(false)
 
 	// API Cross-origin requests
 	apiCors := props.GetBool("http.server.cors", false)
