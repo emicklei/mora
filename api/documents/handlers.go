@@ -105,7 +105,9 @@ func (d *Resource) DatabaseCollectionsHandler(req *restful.Request, resp *restfu
 func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.Response) {
 	// Read a document from request
 	document := bson.M{}
-	if err := req.ReadEntity(&document); err != nil {
+	decoder := json.NewDecoder(req.Request.Body)
+	err := decoder.Decode(&document)
+	if err != nil {
 		WriteStatusError(http.StatusBadRequest, err, resp)
 		return
 	}
