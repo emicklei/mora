@@ -298,6 +298,9 @@ Mora uses a simple properties file to specify host,port,aliases and other option
 	mongod.{alias}.username=
 	mongod.{alias}.password=
 	mongod.{alias}.database=
+	# alternatively, a mongodb connection string uri can be used instead
+	# supported options: http://godoc.org/labix.org/v2/mgo#Dial
+	mongod.{alias}.uri=mongodb://myuser:mypass@localhost:40001,otherhost:40001/mydb
 
 	# enable /stats/ endpoint
 	mora.statistics.enable=true
