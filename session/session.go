@@ -56,7 +56,7 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 
 	// Clone and return if sessions exists
 	if existing != nil {
-		return existing.Clone(), true, nil
+		return existing.Copy(), true, nil
 	}
 
 	// Get timeout from configuration
