@@ -6,8 +6,9 @@ import (
 	"github.com/emicklei/go-restful"
 	. "github.com/emicklei/mora/api/response"
 	"github.com/emicklei/mora/session"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"github.com/compose/mejson"
 	"log"
 	"net/http"
 	"net/url"
@@ -107,6 +108,12 @@ func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.R
 	document := bson.M{}
 	decoder := json.NewDecoder(req.Request.Body)
 	err := decoder.Decode(&document)
+	if err != nil {
+		WriteStatusError(http.StatusBadRequest, err, resp)
+		return
+	}
+
+	document, err = mejson.Unmarshal(document)
 	if err != nil {
 		WriteStatusError(http.StatusBadRequest, err, resp)
 		return
@@ -282,7 +289,12 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 			WriteError(err, resp)
 			return
 		}
-		WriteResponse(document, resp)
+		jsonDocument, err := mejson.Marshal(document)
+		if err != nil {
+			WriteError(err, resp)
+			return
+		}
+		WriteResponse(jsonDocument, resp)
 		return
 	}
 
@@ -294,13 +306,19 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 		return
 	}
 
+	jsonDocuments, err := mejson.Marshal(documents)
+	if err != nil {
+		WriteError(err, resp)
+		return
+	}
+
 	res := struct {
 		Success bool        `json:"success"`
 		Count   interface{} `json:"count,omitempty"`
 		Prev    string      `json:"prev_url,omitempty"`
 		Next    string      `json:"next_url,omitempty"`
 		Data    interface{} `json:"data"`
-	}{Success: true, Data: documents}
+	}{Success: true, Data: jsonDocuments}
 
 	// Get limit amount
 	limitnum := 10
@@ -518,6 +536,10 @@ func getSelector(req *restful.Request) (selector bson.M, one bool, err error) {
 				return
 			}
 			err = json.Unmarshal([]byte(query), &selector)
+			if err != nil {
+				return
+			}
+			selector, err = mejson.Unmarshal(selector)
 			if err != nil {
 				return
 			}
