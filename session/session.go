@@ -47,11 +47,20 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 		return nil, false, err
 	}
 
-	hostport := config["host"] + ":" + config["port"]
+	var uri string
+	var hostport string
+	var sessionId string
+	if uriConfig := strings.Trim(config["uri"], " "); len(uriConfig) != 0 {
+		uri = config["uri"]
+		sessionId = uri
+	} else {
+		hostport = config["host"] + ":" + config["port"]
+		sessionId = hostport
+	}
 
 	// Check if session already exists
 	s.accessLock.RLock()
-	existing := s.sessions[hostport]
+	existing := s.sessions[sessionId]
 	s.accessLock.RUnlock()
 
 	// Clone and return if sessions exists
@@ -70,32 +79,37 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 	}
 
 	// Connect to database server
-	info("connecting to [%s=%s] with timeout [%d seconds]", config["alias"], hostport, timeout)
-	dialInfo := mgo.DialInfo{
-		Addrs:    []string{hostport},
-		Direct:   true,
-		Database: config["database"],
-		Username: config["username"],
-		Password: config["password"],
-		Timeout:  time.Duration(timeout) * time.Second,
+	info("connecting to [%s=%s] with timeout [%d seconds]", config["alias"], sessionId, timeout)
+	var newSession *mgo.Session
+	if uri != "" {
+		newSession, err = mgo.DialWithTimeout(uri, time.Duration(timeout)*time.Second)
+	} else {
+		dialInfo := mgo.DialInfo{
+			Addrs:    []string{hostport},
+			Direct:   true,
+			Database: config["database"],
+			Username: config["username"],
+			Password: config["password"],
+			Timeout:  time.Duration(timeout) * time.Second,
+		}
+		newSession, err = mgo.DialWithInfo(&dialInfo)
 	}
-	newSession, err := mgo.DialWithInfo(&dialInfo)
 	if err != nil {
-		info("unable to connect to [%s] because:%v", hostport, err)
+		info("unable to connect to [%s] because:%v", sessionId, err)
 		newSession = nil
 	} else {
-		s.sessions[hostport] = newSession
+		s.sessions[sessionId] = newSession
 	}
 	s.accessLock.Unlock()
 	return newSession, false, err
 }
 
-// Closes session based on `host:port`
-func (s *SessionManager) Close(hostport string) {
+// Closes session based on `uri` or `host:port`
+func (s *SessionManager) Close(sessionId string) {
 	s.accessLock.Lock()
-	if existing := s.sessions[hostport]; existing != nil {
+	if existing := s.sessions[sessionId]; existing != nil {
 		existing.Close()
-		delete(s.sessions, hostport)
+		delete(s.sessions, sessionId)
 	}
 	s.accessLock.Unlock()
 }
