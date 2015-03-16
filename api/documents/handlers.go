@@ -105,7 +105,13 @@ func (d *Resource) DatabaseCollectionsHandler(req *restful.Request, resp *restfu
 func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.Response) {
 	// Read a document from request
 	document := bson.M{}
-	if err := req.ReadEntity(&document); err != nil {
+	// Handle JSON parsing manually here, instead of relying on go-restful's
+	// req.ReadEntity. This is because ReadEntity currently parses JSON with
+	// UseNumber() which turns all numbers into strings. See:
+	// https://github.com/emicklei/mora/pull/31
+	decoder := json.NewDecoder(req.Request.Body)
+	err := decoder.Decode(&document)
+	if err != nil {
 		WriteStatusError(http.StatusBadRequest, err, resp)
 		return
 	}
