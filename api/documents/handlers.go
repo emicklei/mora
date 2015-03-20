@@ -289,10 +289,15 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 			WriteError(err, resp)
 			return
 		}
-		jsonDocument, err := mejson.Marshal(document)
-		if err != nil {
-			WriteError(err, resp)
-			return
+		var jsonDocument interface{}
+		if req.QueryParameter("extended_json") == "true" {
+			jsonDocument, err = mejson.Marshal(document)
+			if err != nil {
+				WriteError(err, resp)
+				return
+			}
+		} else {
+			jsonDocument = document
 		}
 		WriteResponse(jsonDocument, resp)
 		return
@@ -306,10 +311,15 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 		return
 	}
 
-	jsonDocuments, err := mejson.Marshal(documents)
-	if err != nil {
-		WriteError(err, resp)
-		return
+	var jsonDocuments interface{}
+	if req.QueryParameter("extended_json") == "true" {
+		jsonDocuments, err = mejson.Marshal(documents)
+		if err != nil {
+			WriteError(err, resp)
+			return
+		}
+	} else {
+		jsonDocuments = documents
 	}
 
 	res := struct {
@@ -408,6 +418,7 @@ func (d *Resource) CollectionRemoveHandler(req *restful.Request, resp *restful.R
 // Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
 // Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 // Param(ws.QueryParameter("sort", "comma separated list of field names")).
+// Param(ws.QueryParameter("extended_json", "set to "true" to return responses in MongoDB Extended JSON format, default=false")).
 //
 func (d *Resource) ComposeQuery(col *mgo.Collection, req *restful.Request) (query *mgo.Query, one bool, err error) {
 	// Get selector from `_id` path parameter and `query` query parameter

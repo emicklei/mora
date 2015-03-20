@@ -11,6 +11,7 @@ When querying on collections those parameters are available:
 	skip   - offset in the result set
 	fields - comma separated list of (path-dotted) field names
 	sort   - comma separated list of (path-dotted) field names
+	extended_json - set to "true" to return responses in [MongoDB Extended JSON](http://docs.mongodb.org/manual/reference/mongodb-extended-json/) format
 
 ##### Examples
 
