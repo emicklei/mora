@@ -5,7 +5,7 @@ import (
 	"github.com/emicklei/go-restful"
 	. "github.com/emicklei/mora/api/response"
 	"github.com/emicklei/mora/session"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Statistics Resource

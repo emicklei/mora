@@ -6,8 +6,9 @@ import (
 	"github.com/emicklei/go-restful"
 	. "github.com/emicklei/mora/api/response"
 	"github.com/emicklei/mora/session"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+	"github.com/compose/mejson"
 	"log"
 	"net/http"
 	"net/url"
@@ -111,6 +112,12 @@ func (d *Resource) CollectionUpdateHandler(req *restful.Request, resp *restful.R
 	// https://github.com/emicklei/mora/pull/31
 	decoder := json.NewDecoder(req.Request.Body)
 	err := decoder.Decode(&document)
+	if err != nil {
+		WriteStatusError(http.StatusBadRequest, err, resp)
+		return
+	}
+
+	document, err = mejson.Unmarshal(document)
 	if err != nil {
 		WriteStatusError(http.StatusBadRequest, err, resp)
 		return
@@ -286,7 +293,17 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 			WriteError(err, resp)
 			return
 		}
-		WriteResponse(document, resp)
+		var jsonDocument interface{}
+		if req.QueryParameter("extended_json") == "true" {
+			jsonDocument, err = mejson.Marshal(document)
+			if err != nil {
+				WriteError(err, resp)
+				return
+			}
+		} else {
+			jsonDocument = document
+		}
+		WriteResponse(jsonDocument, resp)
 		return
 	}
 
@@ -298,13 +315,24 @@ func (d *Resource) CollectionFindHandler(req *restful.Request, resp *restful.Res
 		return
 	}
 
+	var jsonDocuments interface{}
+	if req.QueryParameter("extended_json") == "true" {
+		jsonDocuments, err = mejson.Marshal(documents)
+		if err != nil {
+			WriteError(err, resp)
+			return
+		}
+	} else {
+		jsonDocuments = documents
+	}
+
 	res := struct {
 		Success bool        `json:"success"`
 		Count   interface{} `json:"count,omitempty"`
 		Prev    string      `json:"prev_url,omitempty"`
 		Next    string      `json:"next_url,omitempty"`
 		Data    interface{} `json:"data"`
-	}{Success: true, Data: documents}
+	}{Success: true, Data: jsonDocuments}
 
 	// Get limit amount
 	limitnum := 10
@@ -394,6 +422,7 @@ func (d *Resource) CollectionRemoveHandler(req *restful.Request, resp *restful.R
 // Param(ws.QueryParameter("skip", "number of documents to skip in the result set, default=0")).
 // Param(ws.QueryParameter("limit", "maximum number of documents in the result set, default=10")).
 // Param(ws.QueryParameter("sort", "comma separated list of field names")).
+// Param(ws.QueryParameter("extended_json", "set to "true" to return responses in MongoDB Extended JSON format, default=false")).
 //
 func (d *Resource) ComposeQuery(col *mgo.Collection, req *restful.Request) (query *mgo.Query, one bool, err error) {
 	// Get selector from `_id` path parameter and `query` query parameter
@@ -522,6 +551,10 @@ func getSelector(req *restful.Request) (selector bson.M, one bool, err error) {
 				return
 			}
 			err = json.Unmarshal([]byte(query), &selector)
+			if err != nil {
+				return
+			}
+			selector, err = mejson.Unmarshal(selector)
 			if err != nil {
 				return
 			}

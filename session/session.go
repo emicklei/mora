@@ -3,7 +3,7 @@ package session
 import (
 	"errors"
 	"github.com/emicklei/goproperties"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"log"
 	"strconv"
 	"strings"
