@@ -101,7 +101,7 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 		s.sessions[sessionId] = newSession
 	}
 	s.accessLock.Unlock()
-	return newSession, false, err
+	return newSession.Copy(), false, err
 }
 
 // Closes session based on `uri` or `host:port`
