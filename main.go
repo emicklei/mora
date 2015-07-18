@@ -8,14 +8,14 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful/swagger"
-	properties "github.com/emicklei/goproperties"
 	"github.com/emicklei/mora/api/documents"
 	"github.com/emicklei/mora/api/statistics"
 	"github.com/emicklei/mora/session"
+	"github.com/magiconair/properties"
 )
 
 var (
-	props          properties.Properties
+	props          *properties.Properties
 	propertiesFile = flag.String("config", "mora.properties", "the configuration file")
 
 	SwaggerPath string
@@ -28,16 +28,16 @@ func main() {
 	// Load configurations from a file
 	info("loading configuration from [%s]", *propertiesFile)
 	var err error
-	if props, err = properties.Load(*propertiesFile); err != nil {
+	if props, err = properties.LoadFile(*propertiesFile, properties.UTF8); err != nil {
 		log.Fatalf("[mora][error] Unable to read properties:%v\n", err)
 	}
 
 	// Swagger configuration
-	SwaggerPath = props["swagger.path"]
+	SwaggerPath = props.GetString("swagger.path", "")
 	MoraIcon = filepath.Join(SwaggerPath, "images/mora.ico")
 
 	// New, shared session manager
-	sessMng := session.NewSessionManager(props.SelectProperties("mongod.*"))
+	sessMng := session.NewSessionManager(props.FilterPrefix("mongod."))
 	defer sessMng.CloseAll()
 
 	// accept and respond in JSON unless told otherwise
@@ -61,7 +61,8 @@ func main() {
 		statistics.Register(sessMng, restful.DefaultContainer)
 	}
 
-	basePath := "http://" + props["http.server.host"] + ":" + props["http.server.port"]
+	addr := props.MustGet("http.server.host") + ":" + props.MustGet("http.server.port")
+	basePath := "http://" + addr
 
 	// Register Swagger UI
 	swagger.InstallSwaggerService(swagger.Config{
@@ -69,7 +70,7 @@ func main() {
 		WebServicesUrl:  basePath,
 		ApiPath:         "/apidocs.json",
 		SwaggerPath:     SwaggerPath,
-		SwaggerFilePath: props["swagger.file.path"],
+		SwaggerFilePath: props.GetString("swagger.file.path", ""),
 	})
 
 	// If swagger is not on `/` redirect to it
@@ -81,7 +82,7 @@ func main() {
 	http.HandleFunc("/favion.ico", icon)
 
 	info("ready to serve on %s", basePath)
-	log.Fatal(http.ListenAndServe(props["http.server.host"]+":"+props["http.server.port"], nil))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 // If swagger is not on `/` redirect to it
