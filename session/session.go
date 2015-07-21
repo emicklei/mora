@@ -2,7 +2,7 @@ package session
 
 import (
 	"errors"
-	"github.com/emicklei/goproperties"
+	"github.com/magiconair/properties"
 	"gopkg.in/mgo.v2"
 	"log"
 	"strconv"
@@ -13,16 +13,16 @@ import (
 
 // MongoDB Session Manager
 type SessionManager struct {
-	configMap  map[string]properties.Properties
+	configMap  map[string]*properties.Properties
 	sessions   map[string]*mgo.Session
 	accessLock *sync.RWMutex
 }
 
 // Creates a new Session Manager using `props` as configuration.
 // For more info about properties check `mongod.*` section in `mora.properties`
-func NewSessionManager(props properties.Properties) *SessionManager {
+func NewSessionManager(props *properties.Properties) *SessionManager {
 	sess := &SessionManager{
-		configMap:  make(map[string]properties.Properties),
+		configMap:  make(map[string]*properties.Properties),
 		sessions:   make(map[string]*mgo.Session),
 		accessLock: &sync.RWMutex{},
 	}
@@ -50,11 +50,11 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 	var uri string
 	var hostport string
 	var sessionId string
-	if uriConfig := strings.Trim(config["uri"], " "); len(uriConfig) != 0 {
-		uri = config["uri"]
+	if uriConfig := strings.Trim(config.GetString("uri", ""), " "); len(uriConfig) != 0 {
+		uri = uriConfig
 		sessionId = uri
 	} else {
-		hostport = config["host"] + ":" + config["port"]
+		hostport = config.MustGet("host") + ":" + config.MustGet("port")
 		sessionId = hostport
 	}
 
@@ -71,7 +71,7 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 	// Get timeout from configuration
 	s.accessLock.Lock()
 	timeout := 0
-	if timeoutConfig := strings.Trim(config["timeout"], " "); len(timeoutConfig) != 0 {
+	if timeoutConfig := strings.Trim(config.GetString("timeout", ""), " "); len(timeoutConfig) != 0 {
 		timeout, err = strconv.Atoi(timeoutConfig)
 		if err != nil {
 			return nil, false, err
@@ -79,7 +79,7 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 	}
 
 	// Connect to database server
-	info("connecting to [%s=%s] with timeout [%d seconds]", config["alias"], sessionId, timeout)
+	info("connecting to [%s=%s] with timeout [%d seconds]", config.MustGet("alias"), sessionId, timeout)
 	var newSession *mgo.Session
 	if uri != "" {
 		newSession, err = mgo.DialWithTimeout(uri, time.Duration(timeout)*time.Second)
@@ -87,9 +87,9 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 		dialInfo := mgo.DialInfo{
 			Addrs:    []string{hostport},
 			Direct:   true,
-			Database: config["database"],
-			Username: config["username"],
-			Password: config["password"],
+			Database: config.GetString("database", ""),
+			Username: config.GetString("username", ""),
+			Password: config.GetString("password", ""),
 			Timeout:  time.Duration(timeout) * time.Second,
 		}
 		newSession, err = mgo.DialWithInfo(&dialInfo)
@@ -125,22 +125,22 @@ func (s *SessionManager) CloseAll() {
 }
 
 // Set's session manager configuration.
-func (s *SessionManager) SetConfig(props properties.Properties) {
-	for k, v := range props {
+func (s *SessionManager) SetConfig(props *properties.Properties) {
+	for _, k := range props.Keys() {
 		parts := strings.Split(k, ".")
 		alias := parts[1]
 		config := s.configMap[alias]
 		if config == nil {
-			config = properties.Properties{}
-			config["alias"] = alias
+			config = properties.NewProperties()
+			config.Set("alias", alias)
 			s.configMap[alias] = config
 		}
-		config[parts[2]] = v
+		config.Set(parts[2], props.MustGet(k))
 	}
 }
 
 // Get's session configurations by alias.
-func (s *SessionManager) GetConfig(alias string) (properties.Properties, error) {
+func (s *SessionManager) GetConfig(alias string) (*properties.Properties, error) {
 	if config := s.configMap[alias]; config != nil {
 		return config, nil
 	}
