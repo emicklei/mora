@@ -196,6 +196,7 @@ func (d Resource) WebService() *restful.WebService {
 		Param(database).
 		Param(collection).
 		Param(ws.QueryParameter("query", "query in json format")).
+		Param(ws.QueryParameter("upsert", "insert new doc if no match, default=false").DataType("boolean")).
 		Reads(""))
 
 	//
