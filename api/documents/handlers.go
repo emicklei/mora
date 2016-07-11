@@ -191,7 +191,11 @@ func (d *Resource) handleUpdate(col *mgo.Collection, one bool, selector, documen
 		info, err = col.UpsertId(selector[ParamID], document)
 	} else {
 		// Otherwise update all matching selector
-		_, err = col.UpdateAll(selector, document)
+        if c, _ := strconv.ParseBool(req.QueryParameter("upsert")); c {
+            _, err = col.Upsert(selector, document)
+        } else {
+		    _, err = col.UpdateAll(selector, document)
+        }
 	}
 	if err != nil {
 		WriteError(err, resp)
