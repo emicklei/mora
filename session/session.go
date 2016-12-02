@@ -98,6 +98,30 @@ func (s *SessionManager) Get(alias string) (*mgo.Session, bool, error) {
 		info("unable to connect to [%s] because:%v", sessionId, err)
 		newSession = nil
 	} else {
+		var mode = strings.ToLower(config.GetString("mode", ""))
+		if mode != "" {
+			switch mode {
+			case "primary":
+				newSession.SetMode(mgo.Primary, true)
+			case "primarypreferred":
+				newSession.SetMode(mgo.PrimaryPreferred, true)
+			case "secondary":
+				newSession.SetMode(mgo.Secondary, true)
+			case "secondarypreferred":
+				newSession.SetMode(mgo.SecondaryPreferred, true)
+			case "nearest":
+				newSession.SetMode(mgo.Nearest, true)
+			case "eventual":
+				newSession.SetMode(mgo.Eventual, true)
+			case "monotonic":
+				newSession.SetMode(mgo.Monotonic, true)
+			case "strong":
+				newSession.SetMode(mgo.Strong, true)
+			default:
+				info("Unknown 'mode' configuration value: %s", mode)
+			}
+		}
+
 		s.sessions[sessionId] = newSession
 	}
 	s.accessLock.Unlock()
