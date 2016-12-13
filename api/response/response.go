@@ -1,8 +1,6 @@
 package response
 
-import (
-	"github.com/emicklei/go-restful"
-)
+import restful "github.com/emicklei/go-restful"
 
 type Response struct {
 	Success bool        `json:"success"`
@@ -11,8 +9,7 @@ type Response struct {
 }
 
 func WriteSuccess(resp *restful.Response) {
-	success := NewResponse(true)
-	success.Write(resp)
+	NewResponse(true).WriteStatus(200, resp)
 }
 
 func WriteResponse(data interface{}, resp *restful.Response) {
@@ -48,10 +45,5 @@ func (r *Response) WriteStatus(status int, resp *restful.Response) {
 	if r.Error != nil && r.Error.Code == 0 {
 		r.Error.Code = status
 	}
-	resp.WriteHeader(status)
-	r.Write(resp)
-}
-
-func (r *Response) Write(resp *restful.Response) {
-	resp.WriteEntity(r)
+	resp.WriteHeaderAndEntity(status, r)
 }

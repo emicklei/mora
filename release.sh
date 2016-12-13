@@ -5,10 +5,6 @@ mkdir target
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-go get -v -u github.com/magiconair/properties
-go get -v -u github.com/emicklei/go-restful
-go get -v -u labix.org/v2/mgo 
-
 # build Mora
 go build -o target/mora main.go
 cp mora.properties target

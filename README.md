@@ -74,11 +74,12 @@ When querying on collections those parameters are available:
 ###### Inserting document
 
 	$ curl 'http://127.0.0.1:8181/docs/local/local/new-collection/document-id' \
-	>   -D - \
-	>   -X POST \
-	>   -H 'Content-Type: application/json' \
-	>   -H 'Accept: application/json' \
-	>   --data '{"title": "Some title", "content": "document content"}'
+	-D - \
+	-X POST \
+	-H 'Content-Type: application/json' \
+	-H 'Accept: application/json' \
+	--data '{"title": "Some title", "content": "document content"}'
+	
 	HTTP/1.1 201 Created
 	Content-Location: /docs/local/local/new-collection/document-id
 	Content-Type: application/json
