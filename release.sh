@@ -1,25 +1,19 @@
 #!/bin/sh
 
 rm -rf target
-mkdir target
+mkdir -p target/swagger-ui
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # build Mora
+echo "building mora..."
 go build -o target/mora main.go
+
+echo "preparing archive..."
 cp mora.properties target
+cp -r swagger-ui/dist target/swagger-ui
 
-# fetch or update Swagger UI
-if [ ! -d ./target/swagger-ui ]; then
-	git clone https://github.com/wordnik/swagger-ui.git ./target/swagger-ui
-fi
-
-# apply customizations to Swagger UI
-cp $DIR/scripts/patches/index.html ./target/swagger-ui/dist
-cp $DIR/scripts/patches/logo_small.png ./target/swagger-ui/dist/images
-cp $DIR/scripts/patches/mora.ico ./target/swagger-ui/dist/images
-sed "s/89bf04/89bfAA/" ./target/swagger-ui/dist/css/screen.css > ./target/swagger-ui/dist/css/screen-mora.css
-
+echo "creating archive..."
 ARCHIVE="mora-"`date +"%Y%m%d"`".zip"
 cd target
 	rm -f *.zip
@@ -27,3 +21,4 @@ cd target
 	zip $ARCHIVE mora.properties
 	zip -r $ARCHIVE ./swagger-ui/dist
 	cd ..
+echo "done"	
