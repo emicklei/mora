@@ -29,6 +29,9 @@ func (d Resource) Register(container *restful.Container, cors bool) {
 		ws.Filter(corsRule.Filter)
 	}
 
+	// Add OPTIONS Filter
+	container.Filter(container.OPTIONSFilter)
+
 	// Add webservice to container
 	container.Add(ws)
 }
