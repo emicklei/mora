@@ -1,9 +1,10 @@
 package response
 
 import (
-	"github.com/emicklei/go-restful"
 	"log"
 	"net/http"
+
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 type Error struct {

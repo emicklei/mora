@@ -1,6 +1,6 @@
 package response
 
-import restful "github.com/emicklei/go-restful"
+import restful "github.com/emicklei/go-restful/v3"
 
 type Response struct {
 	Success bool        `json:"success"`

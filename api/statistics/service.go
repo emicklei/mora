@@ -1,7 +1,7 @@
 package statistics
 
 import (
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/emicklei/mora/session"
 )
 

@@ -3,17 +3,18 @@ package documents
 import (
 	"encoding/json"
 	"errors"
-	"github.com/emicklei/go-restful"
-	. "github.com/emicklei/mora/api/response"
-	"github.com/emicklei/mora/session"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-	"github.com/compose/mejson"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/compose/mejson"
+	restful "github.com/emicklei/go-restful/v3"
+	. "github.com/emicklei/mora/api/response"
+	"github.com/emicklei/mora/session"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Resource struct {
@@ -191,11 +192,11 @@ func (d *Resource) handleUpdate(col *mgo.Collection, one bool, selector, documen
 		info, err = col.UpsertId(selector[ParamID], document)
 	} else {
 		// Otherwise update all matching selector
-        if c, _ := strconv.ParseBool(req.QueryParameter("upsert")); c {
-            _, err = col.Upsert(selector, document)
-        } else {
-		    _, err = col.UpdateAll(selector, document)
-        }
+		if c, _ := strconv.ParseBool(req.QueryParameter("upsert")); c {
+			_, err = col.Upsert(selector, document)
+		} else {
+			_, err = col.UpdateAll(selector, document)
+		}
 	}
 	if err != nil {
 		WriteError(err, resp)

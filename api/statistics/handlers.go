@@ -2,7 +2,8 @@ package statistics
 
 import (
 	"fmt"
-	"github.com/emicklei/go-restful"
+
+	restful "github.com/emicklei/go-restful/v3"
 	. "github.com/emicklei/mora/api/response"
 	"github.com/emicklei/mora/session"
 	"gopkg.in/mgo.v2/bson"

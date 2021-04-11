@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/emicklei/mora/api/documents"
 	"github.com/emicklei/mora/api/statistics"
 	"github.com/emicklei/mora/session"
+	"github.com/go-openapi/spec"
 	"github.com/magiconair/properties"
 )
 
@@ -48,7 +49,7 @@ func main() {
 	// faster router
 	restful.DefaultContainer.Router(restful.CurlyRouter{})
 	// no need to access body more than once
-	restful.SetCacheReadEntity(false)
+	// restful.DefaultContainer. SetCacheReadEntity(false)
 
 	// API Cross-origin requests
 	apiCors := props.GetBool("http.server.cors", false)
@@ -57,26 +58,20 @@ func main() {
 	documents.Register(sessMng, restful.DefaultContainer, apiCors)
 
 	// Statistics API
-	if ok := props.GetBool("mora.statistics.enable", false); ok {
+	if ok := props.GetBool("mora.statistics.enabl`e", false); ok {
 		statistics.Register(sessMng, restful.DefaultContainer)
 	}
 
 	addr := props.MustGet("http.server.host") + ":" + props.MustGet("http.server.port")
 	basePath := "http://" + addr
 
-	// Register Swagger UI
-	swagger.InstallSwaggerService(swagger.Config{
-		WebServices:     restful.RegisteredWebServices(),
-		WebServicesUrl:  basePath,
-		ApiPath:         "/apidocs.json",
-		SwaggerPath:     SwaggerPath,
-		SwaggerFilePath: props.GetString("swagger.file.path", ""),
-	})
+	config := restfulspec.Config{
+		WebServices:                   restful.RegisteredWebServices(), // you control what services are visible
+		APIPath:                       "/apidocs.json",
+		PostBuildSwaggerObjectHandler: enrichSwaggerObject}
+	restful.DefaultContainer.Add(restfulspec.NewOpenAPIService(config))
 
-	// If swagger is not on `/` redirect to it
-	if SwaggerPath != "/" {
-		http.HandleFunc("/", index)
-	}
+	http.HandleFunc("/", index)
 
 	// Serve favicon.ico
 	http.HandleFunc("/favion.ico", icon)
@@ -97,4 +92,30 @@ func icon(w http.ResponseWriter, r *http.Request) {
 // Log wrapper
 func info(template string, values ...interface{}) {
 	log.Printf("[mora][info] "+template+"\n", values...)
+}
+
+func enrichSwaggerObject(swo *spec.Swagger) {
+	swo.Info = &spec.Info{
+		InfoProps: spec.InfoProps{
+			Title:       "UserService",
+			Description: "Resource for managing Users",
+			Contact: &spec.ContactInfo{
+				ContactInfoProps: spec.ContactInfoProps{
+					Name:  "john",
+					Email: "john@doe.rp",
+					URL:   "http://johndoe.org",
+				},
+			},
+			License: &spec.License{
+				LicenseProps: spec.LicenseProps{
+					Name: "MIT",
+					URL:  "http://mit.org",
+				},
+			},
+			Version: "1.0.0",
+		},
+	}
+	swo.Tags = []spec.Tag{{TagProps: spec.TagProps{
+		Name:        "users",
+		Description: "Managing users"}}}
 }
